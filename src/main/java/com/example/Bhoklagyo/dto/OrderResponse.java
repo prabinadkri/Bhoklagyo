@@ -4,6 +4,7 @@ import java.util.List;
 
 public class OrderResponse {
     private Long id;
+    private Long customerId;
     private String customerName;
     private Long restaurantId;
     private List<MenuItemResponse> menuItems;
@@ -12,8 +13,9 @@ public class OrderResponse {
 
     public OrderResponse() {}
 
-    public OrderResponse(Long id, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, String status, Double totalPrice) {
+    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, String status, Double totalPrice) {
         this.id = id;
+        this.customerId = customerId;
         this.customerName = customerName;
         this.restaurantId = restaurantId;
         this.menuItems = menuItems;
@@ -27,6 +29,14 @@ public class OrderResponse {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 
     public String getCustomerName() {

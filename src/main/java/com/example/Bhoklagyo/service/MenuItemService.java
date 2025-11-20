@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface MenuItemService {
     List<MenuItemResponse> getMenuItemsByRestaurantId(Long restaurantId);
-    List<MenuItemResponse> updateMenuItemsForRestaurant(Long restaurantId, List<MenuItemRequest> menuItemRequests);
-    void deleteMenuItem(Long restaurantId, Long menuItemId);
+    List<MenuItemResponse> addMenuItemsToRestaurant(Long restaurantId, List<MenuItemRequest> menuItemRequests);
+    MenuItemResponse updateRestaurantMenuItem(Long restaurantMenuItemId, MenuItemRequest menuItemRequest);
+    void deleteRestaurantMenuItem(Long restaurantMenuItemId);
 }

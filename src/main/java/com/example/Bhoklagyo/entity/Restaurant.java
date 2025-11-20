@@ -12,7 +12,11 @@ public class Restaurant {
     private String name;
     
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
-    private List<MenuItem> menuItems = new ArrayList<>();
+    private List<RestaurantMenuItem> restaurantMenuItems = new ArrayList<>();
+    
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private RestaurantOwner owner;
 
 
     public Long getId() {
@@ -24,10 +28,16 @@ public class Restaurant {
     public void setName(String name) {
         this.name = name;
     }
-    public List<MenuItem> getMenuItems() {
-        return menuItems;
+    public List<RestaurantMenuItem> getRestaurantMenuItems() {
+        return restaurantMenuItems;
     }
-    public void setMenuItems(List<MenuItem> menuItems) {
-        this.menuItems = menuItems;
+    public void setRestaurantMenuItems(List<RestaurantMenuItem> restaurantMenuItems) {
+        this.restaurantMenuItems = restaurantMenuItems;
+    }
+    public RestaurantOwner getOwner() {
+        return owner;
+    }
+    public void setOwner(RestaurantOwner owner) {
+        this.owner = owner;
     }
 }

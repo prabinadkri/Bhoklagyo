@@ -1,34 +1,48 @@
 package com.example.Bhoklagyo.entity;
 
 import jakarta.persistence.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
+@Table(name = "menu_items")
 public class MenuItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private String name;
-    
-    @Column(name = "description")
-    private String desc;
-    
-    private Double price;
+    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
+    private List<RestaurantMenuItem> restaurantMenuItems = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "restaurant_id")
-    private Restaurant restaurant;
-
-    @Autowired
-    public void setRestaurant(Restaurant restaurant) {
-        this.restaurant = restaurant;
+    public MenuItem() {}
+    
+    public MenuItem(String name) {
+        this.name = name;
     }
-    public Restaurant getRestaurant() { return restaurant; }
 
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDesc() { return desc; }
-    public void setDesc(String desc) { this.desc = desc; }
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<RestaurantMenuItem> getRestaurantMenuItems() {
+        return restaurantMenuItems;
+    }
+
+    public void setRestaurantMenuItems(List<RestaurantMenuItem> restaurantMenuItems) {
+        this.restaurantMenuItems = restaurantMenuItems;
+    }
 }

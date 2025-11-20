@@ -3,6 +3,7 @@ package com.example.Bhoklagyo.service;
 import com.example.Bhoklagyo.dto.RestaurantRequest;
 import com.example.Bhoklagyo.dto.RestaurantResponse;
 import com.example.Bhoklagyo.entity.Restaurant;
+import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.RestaurantMapper;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     @Transactional(readOnly = true)
     public RestaurantResponse getRestaurantById(Long id) {
         Restaurant restaurant = restaurantRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Restaurant not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));
         return restaurantMapper.toResponse(restaurant);
     }
     

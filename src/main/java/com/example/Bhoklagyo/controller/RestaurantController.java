@@ -47,19 +47,28 @@ public class RestaurantController {
         return ResponseEntity.ok(menuItems);
     }
 
-    @PutMapping("/{id}/menu")
-    public ResponseEntity<List<MenuItemResponse>> updateMenuItemsForRestaurant(
+    @PostMapping("/{id}/menu")
+    public ResponseEntity<List<MenuItemResponse>> addMenuItemsToRestaurant(
             @PathVariable Long id, 
             @RequestBody List<MenuItemRequest> menuItemRequests) {
-        List<MenuItemResponse> updatedItems = menuItemService.updateMenuItemsForRestaurant(id, menuItemRequests);
-        return ResponseEntity.ok(updatedItems);
+        List<MenuItemResponse> responses = menuItemService.addMenuItemsToRestaurant(id, menuItemRequests);
+        return ResponseEntity.status(201).body(responses);
     }
     
-    @DeleteMapping("/{id}/menu/{menuItemId}")
+    @PutMapping("/{id}/menu/{restaurantMenuItemId}")
+    public ResponseEntity<MenuItemResponse> updateRestaurantMenuItem(
+            @PathVariable Long id,
+            @PathVariable Long restaurantMenuItemId, 
+            @RequestBody MenuItemRequest menuItemRequest) {
+        MenuItemResponse response = menuItemService.updateRestaurantMenuItem(restaurantMenuItemId, menuItemRequest);
+        return ResponseEntity.ok(response);
+    }
+    
+    @DeleteMapping("/{id}/menu/{restaurantMenuItemId}")
     public ResponseEntity<Void> deleteMenuItemFromRestaurant(
             @PathVariable Long id, 
-            @PathVariable Long menuItemId) {
-        menuItemService.deleteMenuItem(id, menuItemId);
+            @PathVariable Long restaurantMenuItemId) {
+        menuItemService.deleteRestaurantMenuItem(restaurantMenuItemId);
         return ResponseEntity.noContent().build();
     }
 }

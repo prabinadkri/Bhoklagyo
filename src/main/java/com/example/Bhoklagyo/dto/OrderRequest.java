@@ -3,26 +3,26 @@ package com.example.Bhoklagyo.dto;
 import java.util.List;
 
 public class OrderRequest {
-    private String customerName;
+    private Long customerId;
     private Long restaurantId;
     private List<Long> menuItemIds;
     private String status;
 
     public OrderRequest() {}
 
-    public OrderRequest(String customerName, Long restaurantId, List<Long> menuItemIds, String status) {
-        this.customerName = customerName;
+    public OrderRequest(Long customerId, Long restaurantId, List<Long> menuItemIds, String status) {
+        this.customerId = customerId;
         this.restaurantId = restaurantId;
         this.menuItemIds = menuItemIds;
         this.status = status;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 
     public Long getRestaurantId() {

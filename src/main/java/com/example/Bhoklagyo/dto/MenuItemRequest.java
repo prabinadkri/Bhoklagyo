@@ -1,16 +1,26 @@
 package com.example.Bhoklagyo.dto;
 
 public class MenuItemRequest {
-    private String name;
-    private String desc;
+    private Long menuItemId;  // Reference to base MenuItem, null if creating new
+    private String name;      // For creating new base MenuItem
+    private String description;
     private Double price;
 
     public MenuItemRequest() {}
 
-    public MenuItemRequest(String name, String desc, Double price) {
+    public MenuItemRequest(Long menuItemId, String name, String description, Double price) {
+        this.menuItemId = menuItemId;
         this.name = name;
-        this.desc = desc;
+        this.description = description;
         this.price = price;
+    }
+
+    public Long getMenuItemId() {
+        return menuItemId;
+    }
+
+    public void setMenuItemId(Long menuItemId) {
+        this.menuItemId = menuItemId;
     }
 
     public String getName() {
@@ -21,12 +31,12 @@ public class MenuItemRequest {
         this.name = name;
     }
 
-    public String getDesc() {
-        return desc;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Double getPrice() {

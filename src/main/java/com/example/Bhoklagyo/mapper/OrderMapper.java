@@ -20,15 +20,18 @@ public class OrderMapper {
     
     public OrderResponse toResponse(Order order) {
         Long restaurantId = order.getRestaurant() != null ? order.getRestaurant().getId() : null;
+        Long customerId = order.getCustomer() != null ? order.getCustomer().getId() : null;
+        String customerName = order.getCustomer() != null ? order.getCustomer().getName() : null;
         
-        List<MenuItemResponse> menuItemResponses = order.getMenuItems()
+        List<MenuItemResponse> menuItemResponses = order.getOrderItems()
             .stream()
             .map(menuItemMapper::toResponse)
             .collect(Collectors.toList());
         
         return new OrderResponse(
             order.getId(),
-            order.getCustomerName(),
+            customerId,
+            customerName,
             restaurantId,
             menuItemResponses,
             order.getStatus(),

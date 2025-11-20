@@ -1,20 +1,24 @@
 package com.example.Bhoklagyo.dto;
 
 public class MenuItemResponse {
-    private Long id;
+    private Long id;              // RestaurantMenuItem ID
+    private Long menuItemId;      // Base MenuItem ID
     private String name;
-    private String desc;
+    private String description;
     private Double price;
     private Long restaurantId;
+    private Boolean available;
 
     public MenuItemResponse() {}
 
-    public MenuItemResponse(Long id, String name, String desc, Double price, Long restaurantId) {
+    public MenuItemResponse(Long id, Long menuItemId, String name, String description, Double price, Long restaurantId, Boolean available) {
         this.id = id;
+        this.menuItemId = menuItemId;
         this.name = name;
-        this.desc = desc;
+        this.description = description;
         this.price = price;
         this.restaurantId = restaurantId;
+        this.available = available;
     }
 
     public Long getId() {
@@ -25,6 +29,14 @@ public class MenuItemResponse {
         this.id = id;
     }
 
+    public Long getMenuItemId() {
+        return menuItemId;
+    }
+
+    public void setMenuItemId(Long menuItemId) {
+        this.menuItemId = menuItemId;
+    }
+
     public String getName() {
         return name;
     }
@@ -33,12 +45,12 @@ public class MenuItemResponse {
         this.name = name;
     }
 
-    public String getDesc() {
-        return desc;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Double getPrice() {
@@ -55,5 +67,13 @@ public class MenuItemResponse {
 
     public void setRestaurantId(Long restaurantId) {
         this.restaurantId = restaurantId;
+    }
+
+    public Boolean getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
     }
 }

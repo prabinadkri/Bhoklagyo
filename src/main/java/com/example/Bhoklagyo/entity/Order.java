@@ -9,7 +9,10 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String customerName;
+    
+    @ManyToOne
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
     
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -17,23 +20,23 @@ public class Order {
 
     @ManyToMany
     @JoinTable(
-        name = "order_menu_items",
+        name = "order_items",
         joinColumns = @JoinColumn(name = "order_id"),
-        inverseJoinColumns = @JoinColumn(name = "menu_item_id")
+        inverseJoinColumns = @JoinColumn(name = "restaurant_menu_item_id")
     )
-    private List<MenuItem> menuItems = new ArrayList<>();
+    private List<RestaurantMenuItem> orderItems = new ArrayList<>();
 
     private String status;
 
     private Double totalPrice;
 
     public Long getId() { return id; }
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
     public Restaurant getRestaurant() { return restaurant; }
     public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
-    public List<MenuItem> getMenuItems() { return menuItems; }
-    public void setMenuItems(List<MenuItem> menuItems) { this.menuItems = menuItems; }
+    public List<RestaurantMenuItem> getOrderItems() { return orderItems; }
+    public void setOrderItems(List<RestaurantMenuItem> orderItems) { this.orderItems = orderItems; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public Double getTotalPrice() { return totalPrice; }

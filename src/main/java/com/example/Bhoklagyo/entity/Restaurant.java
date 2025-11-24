@@ -20,6 +20,9 @@ public class Restaurant {
     @JoinColumn(name = "owner_id")
     private RestaurantOwner owner;
     
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
+    private List<RestaurantEmployee> employees = new ArrayList<>();
+    
     @ManyToMany
     @JoinTable(
         name = "restaurant_cuisine_tags",
@@ -69,6 +72,12 @@ public class Restaurant {
     }
     public void setOwner(RestaurantOwner owner) {
         this.owner = owner;
+    }
+    public List<RestaurantEmployee> getEmployees() {
+        return employees;
+    }
+    public void setEmployees(List<RestaurantEmployee> employees) {
+        this.employees = employees;
     }
     public Set<CuisineTag> getCuisineTags() {
         return cuisineTags;

@@ -55,7 +55,7 @@ public class RestaurantController {
         return ResponseEntity.status(201).body(responses);
     }
     
-    @PutMapping("/{id}/menu/{restaurantMenuItemId}")
+    @PatchMapping("/{id}/menu/{restaurantMenuItemId}")
     public ResponseEntity<MenuItemResponse> updateRestaurantMenuItem(
             @PathVariable Long id,
             @PathVariable Long restaurantMenuItemId, 

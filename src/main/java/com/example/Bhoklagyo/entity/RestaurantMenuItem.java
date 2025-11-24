@@ -3,13 +3,7 @@ package com.example.Bhoklagyo.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(
-    name = "restaurant_menu_items",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_restaurant_menuitem",
-        columnNames = {"restaurant_id", "menu_item_id"}
-    )
-)
+@Table(name = "restaurant_menu_items")
 public class RestaurantMenuItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +14,11 @@ public class RestaurantMenuItem {
     private Restaurant restaurant;
     
     @ManyToOne
-    @JoinColumn(name = "menu_item_id", nullable = false)
-    private MenuItem menuItem;
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+    
+    @Column(columnDefinition = "varchar(255) default ''")
+    private String name;
     
     @Column(name = "description")
     private String description;
@@ -30,12 +27,22 @@ public class RestaurantMenuItem {
     private Double price;
     
     private Boolean available = true;
+    
+    private Boolean isVegan = false;
+    
+    private Boolean isVegetarian = false;
+    
+    @Column(length = 500)
+    private String allergyWarnings;
+    
+    private Boolean isTodaySpecial = false;
 
     public RestaurantMenuItem() {}
     
-    public RestaurantMenuItem(Restaurant restaurant, MenuItem menuItem, String description, Double price) {
+    public RestaurantMenuItem(Restaurant restaurant, Category category, String name, String description, Double price) {
         this.restaurant = restaurant;
-        this.menuItem = menuItem;
+        this.category = category;
+        this.name = name;
         this.description = description;
         this.price = price;
     }
@@ -56,12 +63,20 @@ public class RestaurantMenuItem {
         this.restaurant = restaurant;
     }
 
-    public MenuItem getMenuItem() {
-        return menuItem;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setMenuItem(MenuItem menuItem) {
-        this.menuItem = menuItem;
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {
@@ -86,5 +101,37 @@ public class RestaurantMenuItem {
 
     public void setAvailable(Boolean available) {
         this.available = available;
+    }
+
+    public Boolean getIsVegan() {
+        return isVegan;
+    }
+
+    public void setIsVegan(Boolean isVegan) {
+        this.isVegan = isVegan;
+    }
+
+    public Boolean getIsVegetarian() {
+        return isVegetarian;
+    }
+
+    public void setIsVegetarian(Boolean isVegetarian) {
+        this.isVegetarian = isVegetarian;
+    }
+
+    public String getAllergyWarnings() {
+        return allergyWarnings;
+    }
+
+    public void setAllergyWarnings(String allergyWarnings) {
+        this.allergyWarnings = allergyWarnings;
+    }
+
+    public Boolean getIsTodaySpecial() {
+        return isTodaySpecial;
+    }
+
+    public void setIsTodaySpecial(Boolean isTodaySpecial) {
+        this.isTodaySpecial = isTodaySpecial;
     }
 }

@@ -2,23 +2,33 @@ package com.example.Bhoklagyo.dto;
 
 public class MenuItemResponse {
     private Long id;              // RestaurantMenuItem ID
-    private Long menuItemId;      // Base MenuItem ID
-    private String name;
+    private Long categoryId;      // Base Category ID
+    private String categoryName;  // Category name
+    private String name;          // Restaurant-specific name
     private String description;
     private Double price;
     private Long restaurantId;
     private Boolean available;
+    private Boolean isVegan;
+    private Boolean isVegetarian;
+    private String allergyWarnings;
+    private Boolean isTodaySpecial;
 
     public MenuItemResponse() {}
 
-    public MenuItemResponse(Long id, Long menuItemId, String name, String description, Double price, Long restaurantId, Boolean available) {
+    public MenuItemResponse(Long id, Long categoryId, String categoryName, String name, String description, Double price, Long restaurantId, Boolean available, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial) {
         this.id = id;
-        this.menuItemId = menuItemId;
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
         this.name = name;
         this.description = description;
         this.price = price;
         this.restaurantId = restaurantId;
         this.available = available;
+        this.isVegan = isVegan;
+        this.isVegetarian = isVegetarian;
+        this.allergyWarnings = allergyWarnings;
+        this.isTodaySpecial = isTodaySpecial;
     }
 
     public Long getId() {
@@ -29,12 +39,20 @@ public class MenuItemResponse {
         this.id = id;
     }
 
-    public Long getMenuItemId() {
-        return menuItemId;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public void setMenuItemId(Long menuItemId) {
-        this.menuItemId = menuItemId;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public String getName() {
@@ -75,5 +93,37 @@ public class MenuItemResponse {
 
     public void setAvailable(Boolean available) {
         this.available = available;
+    }
+
+    public Boolean getIsVegan() {
+        return isVegan;
+    }
+
+    public void setIsVegan(Boolean isVegan) {
+        this.isVegan = isVegan;
+    }
+
+    public Boolean getIsVegetarian() {
+        return isVegetarian;
+    }
+
+    public void setIsVegetarian(Boolean isVegetarian) {
+        this.isVegetarian = isVegetarian;
+    }
+
+    public String getAllergyWarnings() {
+        return allergyWarnings;
+    }
+
+    public void setAllergyWarnings(String allergyWarnings) {
+        this.allergyWarnings = allergyWarnings;
+    }
+
+    public Boolean getIsTodaySpecial() {
+        return isTodaySpecial;
+    }
+
+    public void setIsTodaySpecial(Boolean isTodaySpecial) {
+        this.isTodaySpecial = isTodaySpecial;
     }
 }

@@ -2,14 +2,20 @@ package com.example.Bhoklagyo.service;
 
 import com.example.Bhoklagyo.dto.RestaurantRequest;
 import com.example.Bhoklagyo.dto.RestaurantResponse;
+import com.example.Bhoklagyo.entity.CuisineTag;
+import com.example.Bhoklagyo.entity.DietaryTag;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.RestaurantMapper;
+import com.example.Bhoklagyo.repository.CuisineTagRepository;
+import com.example.Bhoklagyo.repository.DietaryTagRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,16 +23,46 @@ import java.util.stream.Collectors;
 public class RestaurantServiceImpl implements RestaurantService {
     
     private final RestaurantRepository restaurantRepository;
+    private final CuisineTagRepository cuisineTagRepository;
+    private final DietaryTagRepository dietaryTagRepository;
     private final RestaurantMapper restaurantMapper;
     
-    public RestaurantServiceImpl(RestaurantRepository restaurantRepository, RestaurantMapper restaurantMapper) {
+    public RestaurantServiceImpl(RestaurantRepository restaurantRepository,
+                                CuisineTagRepository cuisineTagRepository,
+                                DietaryTagRepository dietaryTagRepository,
+                                RestaurantMapper restaurantMapper) {
         this.restaurantRepository = restaurantRepository;
+        this.cuisineTagRepository = cuisineTagRepository;
+        this.dietaryTagRepository = dietaryTagRepository;
         this.restaurantMapper = restaurantMapper;
     }
     
     @Override
     public RestaurantResponse createRestaurant(RestaurantRequest request) {
         Restaurant restaurant = restaurantMapper.toEntity(request);
+        
+        // Process cuisine tags - find existing or create new
+        if (request.getCuisineTags() != null && !request.getCuisineTags().isEmpty()) {
+            Set<CuisineTag> cuisineTags = new HashSet<>();
+            for (String tagName : request.getCuisineTags()) {
+                CuisineTag tag = cuisineTagRepository.findByName(tagName)
+                    .orElseGet(() -> cuisineTagRepository.save(new CuisineTag(tagName)));
+                cuisineTags.add(tag);
+            }
+            restaurant.setCuisineTags(cuisineTags);
+        }
+        
+        // Process dietary tags - find existing or create new
+        if (request.getDietaryTags() != null && !request.getDietaryTags().isEmpty()) {
+            Set<DietaryTag> dietaryTags = new HashSet<>();
+            for (String tagName : request.getDietaryTags()) {
+                DietaryTag tag = dietaryTagRepository.findByName(tagName)
+                    .orElseGet(() -> dietaryTagRepository.save(new DietaryTag(tagName)));
+                dietaryTags.add(tag);
+            }
+            restaurant.setDietaryTags(dietaryTags);
+        }
+        
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
         return restaurantMapper.toResponse(savedRestaurant);
     }

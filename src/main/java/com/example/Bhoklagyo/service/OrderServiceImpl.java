@@ -5,6 +5,7 @@ import com.example.Bhoklagyo.dto.OrderResponse;
 import com.example.Bhoklagyo.entity.Customer;
 import com.example.Bhoklagyo.entity.RestaurantMenuItem;
 import com.example.Bhoklagyo.entity.Order;
+import com.example.Bhoklagyo.entity.OrderStatus;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.OrderMapper;
@@ -15,6 +16,7 @@ import com.example.Bhoklagyo.repository.RestaurantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,17 +43,26 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Override
-    public OrderResponse createOrder(OrderRequest request) {
+    public OrderResponse createOrder(Long restaurantId, OrderRequest request) {
         Customer customer = customerRepository.findById(request.getCustomerId())
             .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + request.getCustomerId()));
         
-        Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + request.getRestaurantId()));
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
         
-        // Find RestaurantMenuItem for each menuItemId in this restaurant
+        // Find RestaurantMenuItem for each menuItemId and validate they belong to this restaurant
         List<RestaurantMenuItem> restaurantMenuItems = request.getMenuItemIds().stream()
-            .map(menuItemId -> restaurantMenuItemRepository.findByRestaurantIdAndMenuItemId(request.getRestaurantId(), menuItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Menu item with id " + menuItemId + " not found in restaurant with id " + request.getRestaurantId())))
+            .map(menuItemId -> {
+                RestaurantMenuItem menuItem = restaurantMenuItemRepository.findById(menuItemId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + menuItemId));
+                
+                // Validate that the menu item belongs to the specified restaurant
+                if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+                    throw new ResourceNotFoundException("Menu item with id " + menuItemId + " does not belong to restaurant with id " + restaurantId);
+                }
+                
+                return menuItem;
+            })
             .collect(Collectors.toList());
         
         // Calculate total price from restaurant menu items
@@ -65,6 +76,10 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderItems(restaurantMenuItems);
         order.setStatus(request.getStatus());
         order.setTotalPrice(totalPrice);
+        order.setDeliveryLatitude(request.getDeliveryLatitude());
+        order.setDeliveryLongitude(request.getDeliveryLongitude());
+        order.setFeedback(request.getFeedback());
+        order.setOrderTime(LocalDateTime.now());
         
         Order savedOrder = orderRepository.save(order);
         return orderMapper.toResponse(savedOrder);
@@ -72,9 +87,15 @@ public class OrderServiceImpl implements OrderService {
     
     @Override
     @Transactional(readOnly = true)
-    public OrderResponse getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+    public OrderResponse getOrderById(Long restaurantId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        
+        // Validate that the order belongs to the specified restaurant
+        if (!order.getRestaurant().getId().equals(restaurantId)) {
+            throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to restaurant with id " + restaurantId);
+        }
+        
         return orderMapper.toResponse(order);
     }
     
@@ -88,5 +109,44 @@ public class OrderServiceImpl implements OrderService {
             .stream()
             .map(orderMapper::toResponse)
             .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
+        return orderRepository.findByCustomerId(customerId)
+            .stream()
+            .map(orderMapper::toResponse)
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public OrderResponse updateOrderStatus(Long restaurantId, Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        
+        // Validate that the order belongs to the specified restaurant
+        if (!order.getRestaurant().getId().equals(restaurantId)) {
+            throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to restaurant with id " + restaurantId);
+        }
+        
+        order.setStatus(status);
+        Order updatedOrder = orderRepository.save(order);
+        return orderMapper.toResponse(updatedOrder);
+    }
+
+    @Override
+    public OrderResponse submitOrderFeedback(Long customerId, Long orderId, String feedback) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        
+        // Validate that the order belongs to the specified customer
+        if (!order.getCustomer().getId().equals(customerId)) {
+            throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to customer with id " + customerId);
+        }
+        
+        order.setFeedback(feedback);
+        Order updatedOrder = orderRepository.save(order);
+        return orderMapper.toResponse(updatedOrder);
     }
 }

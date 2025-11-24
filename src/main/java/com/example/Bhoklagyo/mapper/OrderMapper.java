@@ -35,7 +35,11 @@ public class OrderMapper {
             restaurantId,
             menuItemResponses,
             order.getStatus(),
-            order.getTotalPrice()
+            order.getTotalPrice(),
+            order.getDeliveryLatitude(),
+            order.getDeliveryLongitude(),
+            order.getFeedback(),
+            order.getOrderTime()
         );
     }
 }

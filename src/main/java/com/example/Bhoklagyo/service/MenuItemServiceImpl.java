@@ -2,13 +2,12 @@ package com.example.Bhoklagyo.service;
 
 import com.example.Bhoklagyo.dto.MenuItemRequest;
 import com.example.Bhoklagyo.dto.MenuItemResponse;
-import com.example.Bhoklagyo.entity.MenuItem;
+import com.example.Bhoklagyo.entity.Category;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.entity.RestaurantMenuItem;
-import com.example.Bhoklagyo.exception.DuplicateResourceException;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.MenuItemMapper;
-import com.example.Bhoklagyo.repository.MenuItemRepository;
+import com.example.Bhoklagyo.repository.CategoryRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
 import org.springframework.stereotype.Service;
@@ -21,16 +20,16 @@ import java.util.stream.Collectors;
 @Transactional
 public class MenuItemServiceImpl implements MenuItemService {
     
-    private final MenuItemRepository menuItemRepository;
+    private final CategoryRepository categoryRepository;
     private final RestaurantMenuItemRepository restaurantMenuItemRepository;
     private final RestaurantRepository restaurantRepository;
     private final MenuItemMapper menuItemMapper;
     
-    public MenuItemServiceImpl(MenuItemRepository menuItemRepository,
+    public MenuItemServiceImpl(CategoryRepository categoryRepository,
                               RestaurantMenuItemRepository restaurantMenuItemRepository,
                               RestaurantRepository restaurantRepository,
                               MenuItemMapper menuItemMapper) {
-        this.menuItemRepository = menuItemRepository;
+        this.categoryRepository = categoryRepository;
         this.restaurantMenuItemRepository = restaurantMenuItemRepository;
         this.restaurantRepository = restaurantRepository;
         this.menuItemMapper = menuItemMapper;
@@ -52,35 +51,35 @@ public class MenuItemServiceImpl implements MenuItemService {
         
         return menuItemRequests.stream()
             .map(request -> {
-                MenuItem menuItem;
+                Category category;
                 
-                // If menuItemId is provided, use existing MenuItem by ID
-                // Otherwise, check if item with same name exists, or create new one
-                if (request.getMenuItemId() != null) {
-                    menuItem = menuItemRepository.findById(request.getMenuItemId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + request.getMenuItemId()));
+                // If categoryId is provided, use existing Category by ID
+                // Otherwise, check if category with same name exists, or create new one
+                if (request.getCategoryId() != null) {
+                    category = categoryRepository.findById(request.getCategoryId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
                 } else {
-                    // Check if menu item with this name already exists
-                    menuItem = menuItemRepository.findByName(request.getName())
+                    // Check if category with this name already exists
+                    category = categoryRepository.findByName(request.getCategoryName())
                         .orElseGet(() -> {
-                            // Create new base MenuItem if name doesn't exist
-                            MenuItem newItem = menuItemMapper.toEntity(request);
-                            return menuItemRepository.save(newItem);
+                            // Create new base Category if name doesn't exist
+                            Category newCategory = menuItemMapper.toEntity(request);
+                            return categoryRepository.save(newCategory);
                         });
-                }
-                
-                // Check if this menu item is already added to this restaurant
-                if (restaurantMenuItemRepository.existsByRestaurantIdAndMenuItemId(restaurantId, menuItem.getId())) {
-                    throw new DuplicateResourceException("Menu item '" + menuItem.getName() + "' is already added to this restaurant");
                 }
                 
                 // Create RestaurantMenuItem with restaurant-specific attributes
                 RestaurantMenuItem restaurantMenuItem = new RestaurantMenuItem();
                 restaurantMenuItem.setRestaurant(restaurant);
-                restaurantMenuItem.setMenuItem(menuItem);
+                restaurantMenuItem.setCategory(category);
+                restaurantMenuItem.setName(request.getName());
                 restaurantMenuItem.setDescription(request.getDescription());
                 restaurantMenuItem.setPrice(request.getPrice());
                 restaurantMenuItem.setAvailable(true); // Default to available
+                restaurantMenuItem.setIsVegan(request.getIsVegan() != null ? request.getIsVegan() : false);
+                restaurantMenuItem.setIsVegetarian(request.getIsVegetarian() != null ? request.getIsVegetarian() : false);
+                restaurantMenuItem.setAllergyWarnings(request.getAllergyWarnings());
+                restaurantMenuItem.setIsTodaySpecial(request.getIsTodaySpecial() != null ? request.getIsTodaySpecial() : false);
                 
                 RestaurantMenuItem saved = restaurantMenuItemRepository.save(restaurantMenuItem);
                 return menuItemMapper.toResponse(saved);
@@ -94,8 +93,19 @@ public class MenuItemServiceImpl implements MenuItemService {
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant menu item not found with id: " + restaurantMenuItemId));
         
         // Update restaurant-specific attributes
+        restaurantMenuItem.setName(menuItemRequest.getName());
         restaurantMenuItem.setDescription(menuItemRequest.getDescription());
         restaurantMenuItem.setPrice(menuItemRequest.getPrice());
+        if (menuItemRequest.getIsVegan() != null) {
+            restaurantMenuItem.setIsVegan(menuItemRequest.getIsVegan());
+        }
+        if (menuItemRequest.getIsVegetarian() != null) {
+            restaurantMenuItem.setIsVegetarian(menuItemRequest.getIsVegetarian());
+        }
+        restaurantMenuItem.setAllergyWarnings(menuItemRequest.getAllergyWarnings());
+        if (menuItemRequest.getIsTodaySpecial() != null) {
+            restaurantMenuItem.setIsTodaySpecial(menuItemRequest.getIsTodaySpecial());
+        }
         
         RestaurantMenuItem updated = restaurantMenuItemRepository.save(restaurantMenuItem);
         

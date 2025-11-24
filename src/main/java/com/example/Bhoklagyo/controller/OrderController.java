@@ -4,12 +4,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.Bhoklagyo.dto.OrderRequest;
 import com.example.Bhoklagyo.dto.OrderResponse;
+import com.example.Bhoklagyo.dto.OrderStatusRequest;
 import com.example.Bhoklagyo.service.OrderService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/restaurants/{restaurantId}/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -18,21 +19,25 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @GetMapping("/restaurant/{id}")
-    public ResponseEntity<List<OrderResponse>> getOrdersByRestaurantId(@PathVariable Long id) {
-        List<OrderResponse> orders = orderService.getOrdersByRestaurantId(id);
+    @GetMapping
+    public ResponseEntity<List<OrderResponse>> getOrdersByRestaurantId(@PathVariable Long restaurantId) {
+        List<OrderResponse> orders = orderService.getOrdersByRestaurantId(restaurantId);
         return ResponseEntity.ok(orders);
     }
     
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
-        OrderResponse order = orderService.getOrderById(id);
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long restaurantId, @PathVariable Long orderId) {
+        OrderResponse order = orderService.getOrderById(restaurantId, orderId);
         return ResponseEntity.ok(order);
     }
-    
+    @PatchMapping("/{orderId}")
+    public ResponseEntity<OrderResponse> updateOrderStatus(@PathVariable Long restaurantId, @PathVariable Long orderId, @RequestBody OrderStatusRequest request) {
+        OrderResponse updatedOrder = orderService.updateOrderStatus(restaurantId, orderId, request.getStatus());
+        return ResponseEntity.ok(updatedOrder);
+    }
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
-        OrderResponse order = orderService.createOrder(request);
+    public ResponseEntity<OrderResponse> createOrder(@PathVariable Long restaurantId, @RequestBody OrderRequest request) {
+        OrderResponse order = orderService.createOrder(restaurantId, request);
         return ResponseEntity.status(201).body(order);
     }
 }

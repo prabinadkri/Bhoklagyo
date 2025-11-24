@@ -5,20 +5,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "menu_items")
-public class MenuItem {
+@Table(name = "categories")
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
-    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
+    
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<RestaurantMenuItem> restaurantMenuItems = new ArrayList<>();
 
-    public MenuItem() {}
+    public Category() {}
     
-    public MenuItem(String name) {
+    public Category(String name) {
         this.name = name;
     }
 

@@ -1,5 +1,6 @@
 package com.example.Bhoklagyo.entity;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -26,9 +27,21 @@ public class Order {
     )
     private List<RestaurantMenuItem> orderItems = new ArrayList<>();
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 
     private Double totalPrice;
+    
+    private Double deliveryLatitude;
+    
+    private Double deliveryLongitude;
+    
+    @Column(length = 1000)
+    private String feedback;
+    
+    @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
+    private LocalDateTime orderTime;
 
     public Long getId() { return id; }
     public Customer getCustomer() { return customer; }
@@ -37,9 +50,17 @@ public class Order {
     public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
     public List<RestaurantMenuItem> getOrderItems() { return orderItems; }
     public void setOrderItems(List<RestaurantMenuItem> orderItems) { this.orderItems = orderItems; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
     public Double getTotalPrice() { return totalPrice; }
     public void setTotalPrice(Double totalPrice) { this.totalPrice = totalPrice; }
+    public Double getDeliveryLatitude() { return deliveryLatitude; }
+    public void setDeliveryLatitude(Double deliveryLatitude) { this.deliveryLatitude = deliveryLatitude; }
+    public Double getDeliveryLongitude() { return deliveryLongitude; }
+    public void setDeliveryLongitude(Double deliveryLongitude) { this.deliveryLongitude = deliveryLongitude; }
+    public String getFeedback() { return feedback; }
+    public void setFeedback(String feedback) { this.feedback = feedback; }
+    public LocalDateTime getOrderTime() { return orderTime; }
+    public void setOrderTime(LocalDateTime orderTime) { this.orderTime = orderTime; }
 }
 

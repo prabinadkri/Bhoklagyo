@@ -1,5 +1,7 @@
 package com.example.Bhoklagyo.dto;
 
+import com.example.Bhoklagyo.entity.OrderStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class OrderResponse {
@@ -8,12 +10,16 @@ public class OrderResponse {
     private String customerName;
     private Long restaurantId;
     private List<MenuItemResponse> menuItems;
-    private String status;
+    private OrderStatus status;
     private Double totalPrice;
+    private Double deliveryLatitude;
+    private Double deliveryLongitude;
+    private String feedback;
+    private LocalDateTime orderTime;
 
     public OrderResponse() {}
 
-    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, String status, Double totalPrice) {
+    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, OrderStatus status, Double totalPrice, Double deliveryLatitude, Double deliveryLongitude, String feedback, LocalDateTime orderTime) {
         this.id = id;
         this.customerId = customerId;
         this.customerName = customerName;
@@ -21,6 +27,10 @@ public class OrderResponse {
         this.menuItems = menuItems;
         this.status = status;
         this.totalPrice = totalPrice;
+        this.deliveryLatitude = deliveryLatitude;
+        this.deliveryLongitude = deliveryLongitude;
+        this.feedback = feedback;
+        this.orderTime = orderTime;
     }
 
     public Long getId() {
@@ -63,11 +73,11 @@ public class OrderResponse {
         this.menuItems = menuItems;
     }
 
-    public String getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 
@@ -77,5 +87,37 @@ public class OrderResponse {
 
     public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public Double getDeliveryLatitude() {
+        return deliveryLatitude;
+    }
+
+    public void setDeliveryLatitude(Double deliveryLatitude) {
+        this.deliveryLatitude = deliveryLatitude;
+    }
+
+    public Double getDeliveryLongitude() {
+        return deliveryLongitude;
+    }
+
+    public void setDeliveryLongitude(Double deliveryLongitude) {
+        this.deliveryLongitude = deliveryLongitude;
+    }
+
+    public String getFeedback() {
+        return feedback;
+    }
+
+    public void setFeedback(String feedback) {
+        this.feedback = feedback;
+    }
+
+    public LocalDateTime getOrderTime() {
+        return orderTime;
+    }
+
+    public void setOrderTime(LocalDateTime orderTime) {
+        this.orderTime = orderTime;
     }
 }

@@ -18,10 +18,10 @@ public class Restaurant {
     
     @ManyToOne
     @JoinColumn(name = "owner_id")
-    private RestaurantOwner owner;
+    private User owner;
     
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
-    private List<RestaurantEmployee> employees = new ArrayList<>();
+    @OneToMany(mappedBy = "employedRestaurant", cascade = CascadeType.ALL)
+    private List<User> employees = new ArrayList<>();
     
     @ManyToMany
     @JoinTable(
@@ -67,16 +67,16 @@ public class Restaurant {
     public void setRestaurantMenuItems(List<RestaurantMenuItem> restaurantMenuItems) {
         this.restaurantMenuItems = restaurantMenuItems;
     }
-    public RestaurantOwner getOwner() {
+    public User getOwner() {
         return owner;
     }
-    public void setOwner(RestaurantOwner owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
-    public List<RestaurantEmployee> getEmployees() {
+    public List<User> getEmployees() {
         return employees;
     }
-    public void setEmployees(List<RestaurantEmployee> employees) {
+    public void setEmployees(List<User> employees) {
         this.employees = employees;
     }
     public Set<CuisineTag> getCuisineTags() {

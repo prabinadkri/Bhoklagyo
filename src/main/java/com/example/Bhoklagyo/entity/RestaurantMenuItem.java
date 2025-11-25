@@ -26,6 +26,9 @@ public class RestaurantMenuItem {
     @Column(nullable = false)
     private Double price;
     
+    @Column(nullable = true)
+    private Double discountedPrice;
+    
     private Boolean available = true;
     
     private Boolean isVegan = false;
@@ -93,6 +96,18 @@ public class RestaurantMenuItem {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Double getDiscountedPrice() {
+        return discountedPrice;
+    }
+
+    public void setDiscountedPrice(Double discountedPrice) {
+        this.discountedPrice = discountedPrice;
+    }
+    
+    public Double getEffectivePrice() {
+        return discountedPrice != null ? discountedPrice : price;
     }
 
     public Boolean getAvailable() {

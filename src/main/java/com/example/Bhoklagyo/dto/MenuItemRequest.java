@@ -6,6 +6,7 @@ public class MenuItemRequest {
     private String name;      // Restaurant-specific name (e.g., "Margherita Pizza", "Cheese Burger")
     private String description;
     private Double price;
+    private Double discountedPrice;
     private Boolean isVegan;
     private Boolean isVegetarian;
     private String allergyWarnings;
@@ -13,12 +14,13 @@ public class MenuItemRequest {
 
     public MenuItemRequest() {}
 
-    public MenuItemRequest(Long categoryId, String categoryName, String name, String description, Double price, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial) {
+    public MenuItemRequest(Long categoryId, String categoryName, String name, String description, Double price, Double discountedPrice, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial) {
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.name = name;
         this.description = description;
         this.price = price;
+        this.discountedPrice = discountedPrice;
         this.isVegan = isVegan;
         this.isVegetarian = isVegetarian;
         this.allergyWarnings = allergyWarnings;
@@ -63,6 +65,14 @@ public class MenuItemRequest {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Double getDiscountedPrice() {
+        return discountedPrice;
+    }
+
+    public void setDiscountedPrice(Double discountedPrice) {
+        this.discountedPrice = discountedPrice;
     }
 
     public Boolean getIsVegan() {

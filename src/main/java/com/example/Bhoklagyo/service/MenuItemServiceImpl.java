@@ -75,6 +75,7 @@ public class MenuItemServiceImpl implements MenuItemService {
                 restaurantMenuItem.setName(request.getName());
                 restaurantMenuItem.setDescription(request.getDescription());
                 restaurantMenuItem.setPrice(request.getPrice());
+                restaurantMenuItem.setDiscountedPrice(request.getDiscountedPrice());
                 restaurantMenuItem.setAvailable(true); // Default to available
                 restaurantMenuItem.setIsVegan(request.getIsVegan() != null ? request.getIsVegan() : false);
                 restaurantMenuItem.setIsVegetarian(request.getIsVegetarian() != null ? request.getIsVegetarian() : false);
@@ -96,6 +97,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         restaurantMenuItem.setName(menuItemRequest.getName());
         restaurantMenuItem.setDescription(menuItemRequest.getDescription());
         restaurantMenuItem.setPrice(menuItemRequest.getPrice());
+        restaurantMenuItem.setDiscountedPrice(menuItemRequest.getDiscountedPrice());
         if (menuItemRequest.getIsVegan() != null) {
             restaurantMenuItem.setIsVegan(menuItemRequest.getIsVegan());
         }

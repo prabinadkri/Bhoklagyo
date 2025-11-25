@@ -7,6 +7,8 @@ public class MenuItemResponse {
     private String name;          // Restaurant-specific name
     private String description;
     private Double price;
+    private Double discountedPrice;
+    private Double effectivePrice;  // Computed: discountedPrice if present, else price
     private Long restaurantId;
     private Boolean available;
     private Boolean isVegan;
@@ -16,13 +18,15 @@ public class MenuItemResponse {
 
     public MenuItemResponse() {}
 
-    public MenuItemResponse(Long id, Long categoryId, String categoryName, String name, String description, Double price, Long restaurantId, Boolean available, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial) {
+    public MenuItemResponse(Long id, Long categoryId, String categoryName, String name, String description, Double price, Double discountedPrice, Double effectivePrice, Long restaurantId, Boolean available, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial) {
         this.id = id;
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.name = name;
         this.description = description;
         this.price = price;
+        this.discountedPrice = discountedPrice;
+        this.effectivePrice = effectivePrice;
         this.restaurantId = restaurantId;
         this.available = available;
         this.isVegan = isVegan;
@@ -77,6 +81,22 @@ public class MenuItemResponse {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Double getDiscountedPrice() {
+        return discountedPrice;
+    }
+
+    public void setDiscountedPrice(Double discountedPrice) {
+        this.discountedPrice = discountedPrice;
+    }
+
+    public Double getEffectivePrice() {
+        return effectivePrice;
+    }
+
+    public void setEffectivePrice(Double effectivePrice) {
+        this.effectivePrice = effectivePrice;
     }
 
     public Long getRestaurantId() {

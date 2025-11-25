@@ -23,6 +23,8 @@ public class MenuItemMapper {
             restaurantMenuItem.getName(),
             restaurantMenuItem.getDescription(),
             restaurantMenuItem.getPrice(),
+            restaurantMenuItem.getDiscountedPrice(),
+            restaurantMenuItem.getEffectivePrice(),
             restaurantMenuItem.getRestaurant().getId(),
             restaurantMenuItem.getAvailable(),
             restaurantMenuItem.getIsVegan(),

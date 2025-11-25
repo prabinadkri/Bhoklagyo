@@ -13,7 +13,7 @@ public class Order {
     
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    private User customer;
     
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -44,8 +44,8 @@ public class Order {
     private LocalDateTime orderTime;
 
     public Long getId() { return id; }
-    public Customer getCustomer() { return customer; }
-    public void setCustomer(Customer customer) { this.customer = customer; }
+    public User getCustomer() { return customer; }
+    public void setCustomer(User customer) { this.customer = customer; }
     public Restaurant getRestaurant() { return restaurant; }
     public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
     public List<RestaurantMenuItem> getOrderItems() { return orderItems; }

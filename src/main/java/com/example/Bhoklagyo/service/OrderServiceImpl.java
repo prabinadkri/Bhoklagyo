@@ -2,14 +2,14 @@ package com.example.Bhoklagyo.service;
 
 import com.example.Bhoklagyo.dto.OrderRequest;
 import com.example.Bhoklagyo.dto.OrderResponse;
-import com.example.Bhoklagyo.entity.Customer;
+import com.example.Bhoklagyo.entity.User;
 import com.example.Bhoklagyo.entity.RestaurantMenuItem;
 import com.example.Bhoklagyo.entity.Order;
 import com.example.Bhoklagyo.entity.OrderStatus;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.OrderMapper;
-import com.example.Bhoklagyo.repository.CustomerRepository;
+import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.OrderRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
@@ -27,25 +27,25 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final RestaurantRepository restaurantRepository;
     private final RestaurantMenuItemRepository restaurantMenuItemRepository;
-    private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     
     public OrderServiceImpl(OrderRepository orderRepository,
                            RestaurantRepository restaurantRepository,
                            RestaurantMenuItemRepository restaurantMenuItemRepository,
-                           CustomerRepository customerRepository,
+                           UserRepository userRepository,
                            OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.restaurantRepository = restaurantRepository;
         this.restaurantMenuItemRepository = restaurantMenuItemRepository;
-        this.customerRepository = customerRepository;
+        this.userRepository = userRepository;
         this.orderMapper = orderMapper;
     }
     
     @Override
     public OrderResponse createOrder(Long restaurantId, OrderRequest request) {
-        Customer customer = customerRepository.findById(request.getCustomerId())
-            .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + request.getCustomerId()));
+        User customer = userRepository.findById(request.getCustomerId())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getCustomerId()));
         
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
@@ -65,9 +65,9 @@ public class OrderServiceImpl implements OrderService {
             })
             .collect(Collectors.toList());
         
-        // Calculate total price from restaurant menu items
+        // Calculate total price using effective price (discounted if available, else regular price)
         Double totalPrice = restaurantMenuItems.stream()
-            .map(RestaurantMenuItem::getPrice)
+            .map(RestaurantMenuItem::getEffectivePrice)
             .reduce(0.0, Double::sum);
         
         Order order = new Order();

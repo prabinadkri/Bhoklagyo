@@ -47,16 +47,10 @@ public class RestaurantServiceImpl implements RestaurantService {
     
     @Override
     public RestaurantResponse createRestaurant(RestaurantRequest request) {
-        // Authorization: Only users with OWNER role can create restaurants
-        User currentUser = getCurrentUser();
-        if (currentUser.getRole() != Role.OWNER) {
-            throw new AccessDeniedException("Only users with OWNER role can create restaurants");
-        }
+        // Restaurant creation is now handled by ADMIN only (enforced by @PreAuthorize in controller)
+        // Admin creates restaurant without owner initially
         
         Restaurant restaurant = restaurantMapper.toEntity(request);
-        
-        // Set the current user as the owner
-        restaurant.setOwner(currentUser);
         
         // Process cuisine tags - find existing or create new
         if (request.getCuisineTags() != null && !request.getCuisineTags().isEmpty()) {

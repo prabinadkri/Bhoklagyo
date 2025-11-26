@@ -1,5 +1,6 @@
 package com.example.Bhoklagyo.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import com.example.Bhoklagyo.dto.RestaurantRequest;
@@ -30,6 +31,7 @@ public class RestaurantController {
     }
     
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RestaurantResponse> createRestaurant(@RequestBody RestaurantRequest request) {
         RestaurantResponse response = restaurantService.createRestaurant(request);
         return ResponseEntity.status(201).body(response);

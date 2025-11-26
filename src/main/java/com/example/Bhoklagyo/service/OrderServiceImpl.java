@@ -7,12 +7,15 @@ import com.example.Bhoklagyo.entity.RestaurantMenuItem;
 import com.example.Bhoklagyo.entity.Order;
 import com.example.Bhoklagyo.entity.OrderStatus;
 import com.example.Bhoklagyo.entity.Restaurant;
+import com.example.Bhoklagyo.entity.Role;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.OrderMapper;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.OrderRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +49,12 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse createOrder(Long restaurantId, OrderRequest request) {
         User customer = userRepository.findById(request.getCustomerId())
             .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getCustomerId()));
+        
+        // Authorization: Only the customer themselves can create an order
+        User currentUser = getCurrentUser();
+        if (!currentUser.getId().equals(customer.getId())) {
+            throw new AccessDeniedException("You can only create orders for yourself");
+        }
         
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
@@ -96,6 +105,20 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to restaurant with id " + restaurantId);
         }
         
+        // Authorization: Check if user has permission to view this order
+        User currentUser = getCurrentUser();
+        
+        // Customers can only see their own orders
+        if (currentUser.getRole() == Role.CUSTOMER) {
+            if (!order.getCustomer().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("You can only view your own orders");
+            }
+        }
+        // Owners and employees can only see orders from their restaurant
+        else if (currentUser.getRole() == Role.OWNER || currentUser.getRole() == Role.EMPLOYEE) {
+            verifyRestaurantAccess(order.getRestaurant());
+        }
+        
         return orderMapper.toResponse(order);
     }
     
@@ -104,6 +127,9 @@ public class OrderServiceImpl implements OrderService {
     public List<OrderResponse> getOrdersByRestaurantId(Long restaurantId) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new RuntimeException("Restaurant not found with id: " + restaurantId));
+        
+        // Authorization: Only restaurant owner or employees can view restaurant orders
+        verifyRestaurantAccess(restaurant);
         
         return orderRepository.findByRestaurant(restaurant)
             .stream()
@@ -114,6 +140,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
+        // Authorization: Users can only view their own orders
+        User currentUser = getCurrentUser();
+        if (!currentUser.getId().equals(customerId)) {
+            throw new AccessDeniedException("You can only view your own orders");
+        }
+        
         return orderRepository.findByCustomerId(customerId)
             .stream()
             .map(orderMapper::toResponse)
@@ -130,6 +162,9 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to restaurant with id " + restaurantId);
         }
         
+        // Authorization: Only restaurant owner or employees can update order status
+        verifyRestaurantAccess(order.getRestaurant());
+        
         order.setStatus(status);
         Order updatedOrder = orderRepository.save(order);
         return orderMapper.toResponse(updatedOrder);
@@ -145,8 +180,37 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to customer with id " + customerId);
         }
         
+        // Authorization: Users can only submit feedback for their own orders
+        User currentUser = getCurrentUser();
+        if (!currentUser.getId().equals(customerId)) {
+            throw new AccessDeniedException("You can only submit feedback for your own orders");
+        }
+        
         order.setFeedback(feedback);
         Order updatedOrder = orderRepository.save(order);
         return orderMapper.toResponse(updatedOrder);
+    }
+    
+    private User getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+    }
+    
+    private void verifyRestaurantAccess(Restaurant restaurant) {
+        User currentUser = getCurrentUser();
+        
+        // Check if user is the restaurant owner
+        boolean isOwner = restaurant.getOwner() != null && 
+                         restaurant.getOwner().getId().equals(currentUser.getId());
+        
+        // Check if user is an employee of the restaurant
+        boolean isEmployee = currentUser.getRole() == Role.EMPLOYEE && 
+                            currentUser.getEmployedRestaurant() != null && 
+                            currentUser.getEmployedRestaurant().getId().equals(restaurant.getId());
+        
+        if (!isOwner && !isEmployee) {
+            throw new AccessDeniedException("You are not authorized to access orders for this restaurant. Only the restaurant owner or employees can perform this action.");
+        }
     }
 }

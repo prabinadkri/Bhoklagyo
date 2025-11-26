@@ -5,11 +5,15 @@ import com.example.Bhoklagyo.dto.MenuItemResponse;
 import com.example.Bhoklagyo.entity.Category;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.entity.RestaurantMenuItem;
+import com.example.Bhoklagyo.entity.User;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.MenuItemMapper;
 import com.example.Bhoklagyo.repository.CategoryRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
+import com.example.Bhoklagyo.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,15 +27,18 @@ public class MenuItemServiceImpl implements MenuItemService {
     private final CategoryRepository categoryRepository;
     private final RestaurantMenuItemRepository restaurantMenuItemRepository;
     private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
     private final MenuItemMapper menuItemMapper;
     
     public MenuItemServiceImpl(CategoryRepository categoryRepository,
                               RestaurantMenuItemRepository restaurantMenuItemRepository,
                               RestaurantRepository restaurantRepository,
+                              UserRepository userRepository,
                               MenuItemMapper menuItemMapper) {
         this.categoryRepository = categoryRepository;
         this.restaurantMenuItemRepository = restaurantMenuItemRepository;
         this.restaurantRepository = restaurantRepository;
+        this.userRepository = userRepository;
         this.menuItemMapper = menuItemMapper;
     }
     
@@ -48,6 +55,9 @@ public class MenuItemServiceImpl implements MenuItemService {
     public List<MenuItemResponse> addMenuItemsToRestaurant(Long restaurantId, List<MenuItemRequest> menuItemRequests) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
+        
+        // Authorization check: Only the restaurant owner can add menu items
+        verifyRestaurantOwner(restaurant);
         
         return menuItemRequests.stream()
             .map(request -> {
@@ -93,6 +103,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         RestaurantMenuItem restaurantMenuItem = restaurantMenuItemRepository.findById(restaurantMenuItemId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant menu item not found with id: " + restaurantMenuItemId));
         
+        // Authorization check: Only the restaurant owner can update menu items
+        verifyRestaurantOwner(restaurantMenuItem.getRestaurant());
+        
         // Update restaurant-specific attributes
         restaurantMenuItem.setName(menuItemRequest.getName());
         restaurantMenuItem.setDescription(menuItemRequest.getDescription());
@@ -119,6 +132,19 @@ public class MenuItemServiceImpl implements MenuItemService {
         RestaurantMenuItem restaurantMenuItem = restaurantMenuItemRepository.findById(restaurantMenuItemId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant menu item not found with id: " + restaurantMenuItemId));
         
+        // Authorization check: Only the restaurant owner can delete menu items
+        verifyRestaurantOwner(restaurantMenuItem.getRestaurant());
+        
         restaurantMenuItemRepository.delete(restaurantMenuItem);
+    }
+    
+    private void verifyRestaurantOwner(Restaurant restaurant) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+        
+        if (restaurant.getOwner() == null || !restaurant.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You are not authorized to modify menu items for this restaurant. Only the restaurant owner can perform this action.");
+        }
     }
 }

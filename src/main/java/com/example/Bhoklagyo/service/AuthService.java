@@ -33,19 +33,28 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        System.out.println("=== LOGIN START ===");
         try {
+            System.out.println("=== BEFORE AUTHENTICATION ===");
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
+            System.out.println("=== AFTER AUTHENTICATION ===");
         } catch (AuthenticationException e) {
+            System.out.println("=== AUTHENTICATION FAILED ===");
             throw new BadCredentialsException("Invalid username or password");
         }
 
+        System.out.println("=== BEFORE FIND USER ===");
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("=== AFTER FIND USER ===");
 
+        System.out.println("=== BEFORE GENERATE TOKEN ===");
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        System.out.println("=== AFTER GENERATE TOKEN ===");
 
+        System.out.println("=== BEFORE CREATE RESPONSE ===");
         return new LoginResponse(token, user.getUsername(), user.getRole().name(), user.getId());
     }
 

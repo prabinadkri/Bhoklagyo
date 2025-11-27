@@ -37,6 +37,7 @@ public class CustomerRoleIntegrationTest {
     private static Long restaurantId;
     private static Long menuItemId;
     private static Long orderId;
+    private static String vendorPanNumber = "1234567890";
 
     @Test
     @Order(1)
@@ -65,7 +66,30 @@ public class CustomerRoleIntegrationTest {
 
     @Test
     @Order(2)
-    @DisplayName("2. Register Customer")
+    @DisplayName("2. Admin Creates Vendor")
+    void testAdminCreatesVendor() throws Exception {
+        VendorRequest vendorRequest = new VendorRequest();
+        vendorRequest.setPanNumber(vendorPanNumber);
+        vendorRequest.setBusinessName("Test Vendor LLC");
+        vendorRequest.setAccountNumber("ACC123456789");
+        vendorRequest.setIsVatRegistered(true);
+        vendorRequest.setEmail("vendor@test.com");
+        vendorRequest.setPhoneNumber("+977-9800000002");
+        vendorRequest.setAddress("Kathmandu, Nepal");
+
+        mockMvc.perform(post("/vendors")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(vendorRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.panNumber").value(vendorPanNumber));
+        
+        System.out.println("✓ Admin created vendor with PAN: " + vendorPanNumber);
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("3. Register Customer")
     void testRegisterCustomer() throws Exception {
         RegisterRequest customerRequest = new RegisterRequest();
         customerRequest.setUsername("customer_test");
@@ -93,13 +117,15 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(3)
-    @DisplayName("3. Customer Cannot Create Restaurant")
+    @Order(4)
+    @DisplayName("4. Customer Cannot Create Restaurant")
     void testCustomerCannotCreateRestaurant() throws Exception {
         RestaurantRequest restaurantRequest = new RestaurantRequest();
         restaurantRequest.setName("Test Restaurant");
         restaurantRequest.setLatitude(27.7172);
         restaurantRequest.setLongitude(85.3240);
+        restaurantRequest.setContactNumber("+977-9851234567");
+        restaurantRequest.setPanNumber(vendorPanNumber);
         restaurantRequest.setCuisineTags(Arrays.asList("Italian", "Fast Food"));
         restaurantRequest.setDietaryTags(Arrays.asList("Vegetarian"));
 
@@ -113,13 +139,15 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(4)
-    @DisplayName("4. Admin Creates Restaurant")
+    @Order(5)
+    @DisplayName("5. Admin Creates Restaurant")
     void testAdminCreatesRestaurant() throws Exception {
         RestaurantRequest restaurantRequest = new RestaurantRequest();
         restaurantRequest.setName("Pizza Palace");
         restaurantRequest.setLatitude(27.7172);
         restaurantRequest.setLongitude(85.3240);
+        restaurantRequest.setContactNumber("+977-9851234567");
+        restaurantRequest.setPanNumber(vendorPanNumber);
         restaurantRequest.setCuisineTags(Arrays.asList("Italian", "Fast Food"));
         restaurantRequest.setDietaryTags(Arrays.asList("Vegetarian", "Vegan"));
 
@@ -139,8 +167,8 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(5)
-    @DisplayName("5. Customer Can View Restaurants")
+    @Order(6)
+    @DisplayName("6. Customer Can View Restaurants")
     void testCustomerCanViewRestaurants() throws Exception {
         mockMvc.perform(get("/restaurants")
                 .header("Authorization", "Bearer " + customerToken))
@@ -152,8 +180,8 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(6)
-    @DisplayName("6. Customer Cannot Add Menu Items")
+    @Order(7)
+    @DisplayName("7. Customer Cannot Add Menu Items")
     void testCustomerCannotAddMenuItems() throws Exception {
         MenuItemRequest menuItemRequest = new MenuItemRequest();
         menuItemRequest.setCategoryName("Pizza");
@@ -173,8 +201,8 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(7)
-    @DisplayName("7. Customer Can View Menu")
+    @Order(8)
+    @DisplayName("8. Customer Can View Menu")
     void testCustomerCanViewMenu() throws Exception {
         mockMvc.perform(get("/restaurants/" + restaurantId + "/menu"))
                 .andExpect(status().isOk())
@@ -184,8 +212,8 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(8)
-    @DisplayName("8. Customer Cannot Create Order Without Menu Items")
+    @Order(9)
+    @DisplayName("9. Customer Cannot Create Order Without Menu Items")
     void testCustomerCannotCreateOrderWithoutMenuItems() throws Exception {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setCustomerId(customerId);
@@ -205,7 +233,7 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     @DisplayName("9. Customer Cannot Update Order Status")
     void testCustomerCannotUpdateOrderStatus() throws Exception {
         OrderStatusRequest statusRequest = new OrderStatusRequest();
@@ -228,7 +256,7 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     @DisplayName("10. Customer Can View Own Orders")
     void testCustomerCanViewOwnOrders() throws Exception {
         mockMvc.perform(get("/users/" + customerId + "/orders")
@@ -240,7 +268,7 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     @DisplayName("11. Customer Cannot View Another Customer's Orders")
     void testCustomerCannotViewOtherCustomerOrders() throws Exception {
         Long otherCustomerId = 999L;
@@ -253,7 +281,7 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     @DisplayName("12. Customer Cannot Access Restaurant Orders")
     void testCustomerCannotAccessRestaurantOrders() throws Exception {
         mockMvc.perform(get("/restaurants/" + restaurantId + "/orders")
@@ -264,7 +292,7 @@ public class CustomerRoleIntegrationTest {
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     @DisplayName("13. Unauthenticated User Cannot Access Protected Endpoints")
     void testUnauthenticatedUserCannotAccessProtectedEndpoints() throws Exception {
         // Try to create order without token

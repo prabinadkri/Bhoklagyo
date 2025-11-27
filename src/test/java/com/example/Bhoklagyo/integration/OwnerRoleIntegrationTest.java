@@ -39,6 +39,7 @@ public class OwnerRoleIntegrationTest {
     private static Long restaurantId;
     private static Long menuItemId;
     private static Long orderId;
+    private static String vendorPanNumber = "9876543210";
 
     @Test
     @Order(1)
@@ -129,6 +130,8 @@ public class OwnerRoleIntegrationTest {
         restaurantRequest.setName("Owner's Restaurant");
         restaurantRequest.setLatitude(27.7172);
         restaurantRequest.setLongitude(85.3240);
+        restaurantRequest.setContactNumber("+977-9851111111");
+        restaurantRequest.setPanNumber(vendorPanNumber);
         restaurantRequest.setCuisineTags(Arrays.asList("Chinese", "Asian"));
 
         mockMvc.perform(post("/restaurants")
@@ -142,12 +145,37 @@ public class OwnerRoleIntegrationTest {
 
     @Test
     @Order(5)
-    @DisplayName("5. Admin Creates Restaurant")
+    @DisplayName("5. Admin Creates Vendor")
+    void testAdminCreatesVendor() throws Exception {
+        VendorRequest vendorRequest = new VendorRequest();
+        vendorRequest.setPanNumber(vendorPanNumber);
+        vendorRequest.setBusinessName("Owner Test Vendor LLC");
+        vendorRequest.setAccountNumber("ACC987654321");
+        vendorRequest.setIsVatRegistered(false);
+        vendorRequest.setEmail("ownervendor@test.com");
+        vendorRequest.setPhoneNumber("+977-9800000003");
+        vendorRequest.setAddress("Lalitpur, Nepal");
+
+        mockMvc.perform(post("/vendors")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(vendorRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.panNumber").value(vendorPanNumber));
+        
+        System.out.println("✓ Admin created vendor with PAN: " + vendorPanNumber);
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("6. Admin Creates Restaurant")
     void testAdminCreatesRestaurant() throws Exception {
         RestaurantRequest restaurantRequest = new RestaurantRequest();
         restaurantRequest.setName("Burger House");
         restaurantRequest.setLatitude(27.7172);
         restaurantRequest.setLongitude(85.3240);
+        restaurantRequest.setContactNumber("+977-9851234567");
+        restaurantRequest.setPanNumber(vendorPanNumber);
         restaurantRequest.setCuisineTags(Arrays.asList("American", "Fast Food"));
         restaurantRequest.setDietaryTags(Arrays.asList("Non-Vegetarian"));
 
@@ -167,8 +195,8 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(6)
-    @DisplayName("6. Admin Assigns Owner to Restaurant")
+    @Order(7)
+    @DisplayName("7. Admin Assigns Owner to Restaurant")
     void testAdminAssignsOwner() throws Exception {
         AssignOwnerRequest assignRequest = new AssignOwnerRequest();
         assignRequest.setUserId(ownerId);
@@ -185,14 +213,16 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(7)
-    @DisplayName("7. Owner Cannot Add Menu Items to Unowned Restaurant")
+    @Order(8)
+    @DisplayName("8. Owner Cannot Add Menu Items to Unowned Restaurant")
     void testOwnerCannotAddMenuToUnownedRestaurant() throws Exception {
         // Create another restaurant
         RestaurantRequest restaurantRequest = new RestaurantRequest();
         restaurantRequest.setName("Another Restaurant");
         restaurantRequest.setLatitude(27.7172);
         restaurantRequest.setLongitude(85.3240);
+        restaurantRequest.setContactNumber("+977-9851111112");
+        restaurantRequest.setPanNumber(vendorPanNumber);
 
         MvcResult result = mockMvc.perform(post("/restaurants")
                 .header("Authorization", "Bearer " + adminToken)
@@ -220,7 +250,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     @DisplayName("8. Owner Can Add Menu Items to Owned Restaurant")
     void testOwnerCanAddMenuItems() throws Exception {
         MenuItemRequest menuItemRequest = new MenuItemRequest();
@@ -250,7 +280,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     @DisplayName("9. Owner Can Update Menu Items")
     void testOwnerCanUpdateMenuItems() throws Exception {
         MenuItemRequest updateRequest = new MenuItemRequest();
@@ -272,7 +302,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     @DisplayName("10. Customer Creates Order")
     void testCustomerCreatesOrder() throws Exception {
         OrderRequest orderRequest = new OrderRequest();
@@ -299,7 +329,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     @DisplayName("11. Owner Can View Restaurant Orders")
     void testOwnerCanViewRestaurantOrders() throws Exception {
         mockMvc.perform(get("/restaurants/" + restaurantId + "/orders")
@@ -312,7 +342,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     @DisplayName("12. Owner Can Update Order Status")
     void testOwnerCanUpdateOrderStatus() throws Exception {
         OrderStatusRequest statusRequest = new OrderStatusRequest();
@@ -329,7 +359,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     @DisplayName("13. Owner Can View Specific Order")
     void testOwnerCanViewSpecificOrder() throws Exception {
         mockMvc.perform(get("/restaurants/" + restaurantId + "/orders/" + orderId)
@@ -342,7 +372,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(14)
+    @Order(15)
     @DisplayName("14. Owner Cannot Access Another Restaurant's Orders")
     void testOwnerCannotAccessOtherRestaurantOrders() throws Exception {
         Long otherRestaurantId = 999L;
@@ -361,7 +391,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(15)
+    @Order(16)
     @DisplayName("15. Owner Can Delete Menu Items")
     void testOwnerCanDeleteMenuItems() throws Exception {
         // First add a menu item to delete
@@ -390,7 +420,7 @@ public class OwnerRoleIntegrationTest {
     }
 
     @Test
-    @Order(16)
+    @Order(17)
     @DisplayName("16. Customer Cannot Delete Menu Items")
     void testCustomerCannotDeleteMenuItems() throws Exception {
         // First add a menu item

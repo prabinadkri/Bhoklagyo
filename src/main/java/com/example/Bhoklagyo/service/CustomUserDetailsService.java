@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
-@Service
+// @Service - Disabled in favor of UnifiedUserDetailsService
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;

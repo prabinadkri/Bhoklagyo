@@ -1,7 +1,6 @@
 package com.example.Bhoklagyo.config;
 
-import com.example.Bhoklagyo.service.CustomUserDetailsService;
-import com.example.Bhoklagyo.security.AdminUserDetailsService;
+import com.example.Bhoklagyo.service.UnifiedUserDetailsService;
 import com.example.Bhoklagyo.security.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,14 +20,11 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final CustomUserDetailsService userDetailsService;
-    private final AdminUserDetailsService adminUserDetailsService;
+    private final UnifiedUserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService,
-                                   AdminUserDetailsService adminUserDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UnifiedUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
-        this.adminUserDetailsService = adminUserDetailsService;
     }
 
     @Override
@@ -45,32 +41,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = jwtUtil.extractRole(token);
                 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = null;
-                    
-                    // Load user details based on role
-                    if ("ADMIN".equals(role)) {
-                        try {
-                            userDetails = adminUserDetailsService.loadUserByUsername(username);
-                        } catch (UsernameNotFoundException e) {
-                            // Admin not found, continue without authentication
-                        }
-                    } else {
-                        try {
-                            userDetails = userDetailsService.loadUserByUsername(username);
-                        } catch (UsernameNotFoundException e) {
-                            // User not found, continue without authentication
-                        }
-                    }
-                    
-                    if (userDetails != null && jwtUtil.validateToken(token, userDetails)) {
+                    try {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                        
+                        if (jwtUtil.validateToken(token, userDetails)) {
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
                                 userDetails.getAuthorities()
                         );
                         
-                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authToken);
+                        }
+                    } catch (UsernameNotFoundException e) {
+                        // User not found, continue without authentication
                     }
                 }
             } catch (Exception e) {

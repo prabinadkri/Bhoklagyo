@@ -1,22 +1,41 @@
 package com.example.Bhoklagyo.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RestaurantRequest {
+    @NotBlank(message = "Restaurant name is required")
     private String name;
+    
+    @NotNull(message = "Latitude is required")
     private Double latitude;
+    
+    @NotNull(message = "Longitude is required")
     private Double longitude;
+    
+    private String contactNumber;
+    
+    @NotBlank(message = "Vendor PAN number is required")
+    private String panNumber;
+    
     private List<String> cuisineTags;
     private List<String> dietaryTags;
+    private List<Long> documentIds = new ArrayList<>();
 
     public RestaurantRequest() {}
 
-    public RestaurantRequest(String name, Double latitude, Double longitude, List<String> cuisineTags, List<String> dietaryTags) {
+    public RestaurantRequest(String name, Double latitude, Double longitude, String contactNumber, String panNumber, 
+                           List<String> cuisineTags, List<String> dietaryTags, List<Long> documentIds) {
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.contactNumber = contactNumber;
+        this.panNumber = panNumber;
         this.cuisineTags = cuisineTags;
         this.dietaryTags = dietaryTags;
+        this.documentIds = documentIds;
     }
 
     public String getName() {
@@ -43,6 +62,22 @@ public class RestaurantRequest {
         this.longitude = longitude;
     }
 
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public String getPanNumber() {
+        return panNumber;
+    }
+
+    public void setPanNumber(String panNumber) {
+        this.panNumber = panNumber;
+    }
+
     public List<String> getCuisineTags() {
         return cuisineTags;
     }
@@ -57,5 +92,13 @@ public class RestaurantRequest {
 
     public void setDietaryTags(List<String> dietaryTags) {
         this.dietaryTags = dietaryTags;
+    }
+
+    public List<Long> getDocumentIds() {
+        return documentIds;
+    }
+
+    public void setDocumentIds(List<Long> documentIds) {
+        this.documentIds = documentIds;
     }
 }

@@ -35,6 +35,8 @@ public class RestaurantMapper {
             restaurant.getName(),
             restaurant.getLatitude(),
             restaurant.getLongitude(),
+            restaurant.getIsFeatured(),
+            restaurant.getPhotoUrl(),
             cuisineTagNames,
             dietaryTagNames
         );

@@ -1,5 +1,6 @@
 package com.example.Bhoklagyo.service;
 
+import com.example.Bhoklagyo.dto.PaginatedRestaurantResponse;
 import com.example.Bhoklagyo.dto.RestaurantRequest;
 import com.example.Bhoklagyo.dto.RestaurantResponse;
 import com.example.Bhoklagyo.entity.CuisineTag;
@@ -17,6 +18,8 @@ import com.example.Bhoklagyo.repository.RestaurantRepository;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.repository.VendorRepository;
 import com.example.Bhoklagyo.repository.DocumentRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -123,9 +126,60 @@ public class RestaurantServiceImpl implements RestaurantService {
             .collect(Collectors.toList());
     }
     
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedRestaurantResponse getAllRestaurantsPaginated(Long cursor, Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 20;
+        }
+        // Fetch one extra to determine if there are more results
+        Pageable pageable = PageRequest.of(0, limit + 1);
+        
+        List<Restaurant> restaurants;
+        if (cursor == null) {
+            restaurants = restaurantRepository.findAllOrdered(pageable);
+        } else {
+            restaurants = restaurantRepository.findAllWithCursor(cursor, pageable);
+        }
+        
+        boolean hasMore = restaurants.size() > limit;
+        if (hasMore) {
+            restaurants = restaurants.subList(0, limit);
+        }
+        
+        List<RestaurantResponse> responses = restaurants.stream()
+            .map(restaurantMapper::toResponse)
+            .collect(Collectors.toList());
+        
+        Long nextCursor = null;
+        if (hasMore && !restaurants.isEmpty()) {
+            nextCursor = restaurants.get(restaurants.size() - 1).getId();
+        }
+        
+        return new PaginatedRestaurantResponse(responses, nextCursor, hasMore);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantResponse> getFeaturedRestaurants() {
+        return restaurantRepository.findByIsFeaturedTrue()
+            .stream()
+            .map(restaurantMapper::toResponse)
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantResponse> getRestaurantsByOwnerId(Long ownerId) {
+        return restaurantRepository.findByOwnerId(ownerId)
+            .stream()
+            .map(restaurantMapper::toResponse)
+            .collect(Collectors.toList());
+    }
+    
     private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 }

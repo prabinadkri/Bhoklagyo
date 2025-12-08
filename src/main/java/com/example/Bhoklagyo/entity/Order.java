@@ -40,6 +40,9 @@ public class Order {
     @Column(length = 1000)
     private String feedback;
     
+    @Column(length = 500)
+    private String specialRequest;
+    
     @Column(columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime orderTime;
 
@@ -60,6 +63,8 @@ public class Order {
     public void setDeliveryLongitude(Double deliveryLongitude) { this.deliveryLongitude = deliveryLongitude; }
     public String getFeedback() { return feedback; }
     public void setFeedback(String feedback) { this.feedback = feedback; }
+    public String getSpecialRequest() { return specialRequest; }
+    public void setSpecialRequest(String specialRequest) { this.specialRequest = specialRequest; }
     public LocalDateTime getOrderTime() { return orderTime; }
     public void setOrderTime(LocalDateTime orderTime) { this.orderTime = orderTime; }
 }

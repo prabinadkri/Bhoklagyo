@@ -88,6 +88,7 @@ public class OrderServiceImpl implements OrderService {
         order.setDeliveryLatitude(request.getDeliveryLatitude());
         order.setDeliveryLongitude(request.getDeliveryLongitude());
         order.setFeedback(request.getFeedback());
+        order.setSpecialRequest(request.getSpecialRequest());
         order.setOrderTime(LocalDateTime.now());
         
         Order savedOrder = orderRepository.save(order);
@@ -141,6 +142,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
         // Authorization: Users can only view their own orders
+        
         User currentUser = getCurrentUser();
         if (!currentUser.getId().equals(customerId)) {
             throw new AccessDeniedException("You can only view your own orders");
@@ -192,9 +194,9 @@ public class OrderServiceImpl implements OrderService {
     }
     
     private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
     
     private void verifyRestaurantAccess(Restaurant restaurant) {

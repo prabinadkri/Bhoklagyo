@@ -1,5 +1,6 @@
 package com.example.Bhoklagyo.controller;
 
+import com.example.Bhoklagyo.dto.PaginatedSearchResultResponse;
 import com.example.Bhoklagyo.dto.SearchResultResponse;
 import com.example.Bhoklagyo.service.SearchService;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +17,11 @@ public class SearchController {
     }
     
     @GetMapping
-    public ResponseEntity<SearchResultResponse> search(@RequestParam String keyword) {
-        SearchResultResponse results = searchService.search(keyword);
+    public ResponseEntity<PaginatedSearchResultResponse> search(
+            @RequestParam String keyword,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") Integer limit) {
+        PaginatedSearchResultResponse results = searchService.searchPaginated(keyword, cursor, limit);
         return ResponseEntity.ok(results);
     }
 }

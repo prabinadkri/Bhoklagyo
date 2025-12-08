@@ -37,55 +37,49 @@ public class AuthService {
         try {
             System.out.println("=== BEFORE AUTHENTICATION ===");
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
             System.out.println("=== AFTER AUTHENTICATION ===");
         } catch (AuthenticationException e) {
             System.out.println("=== AUTHENTICATION FAILED ===");
-            throw new BadCredentialsException("Invalid username or password");
+            throw new BadCredentialsException("Invalid email or password");
         }
 
         System.out.println("=== BEFORE FIND USER ===");
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         System.out.println("=== AFTER FIND USER ===");
 
         System.out.println("=== BEFORE GENERATE TOKEN ===");
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         System.out.println("=== AFTER GENERATE TOKEN ===");
 
         System.out.println("=== BEFORE CREATE RESPONSE ===");
-        return new LoginResponse(token, user.getUsername(), user.getRole().name(), user.getId());
+        return new LoginResponse(token, user.getEmail(), user.getName(), user.getRole().name(), user.getId());
     }
 
     public LoginResponse register(RegisterRequest request) {
-        // Check if username already exists
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new DuplicateResourceException("Username already exists");
+        // Check if email already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new DuplicateResourceException("Email already exists");
         }
 
         // Validate role-specific requirements
-        if (request.getRole() == Role.CUSTOMER && request.getAddress() == null) {
-            throw new IllegalArgumentException("Address is required for CUSTOMER role");
-        }
+        
 
         // Create new user
         User user = new User();
-        user.setUsername(request.getUsername());
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setRole(request.getRole());
         
-        if (request.getRole() == Role.CUSTOMER) {
-            user.setAddress(request.getAddress());
-        }
-
+        
         User savedUser = userRepository.save(user);
 
-        String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole().name());
+        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
 
-        return new LoginResponse(token, savedUser.getUsername(), savedUser.getRole().name(), savedUser.getId());
+        return new LoginResponse(token, savedUser.getEmail(), savedUser.getName(), savedUser.getRole().name(), savedUser.getId());
     }
 }

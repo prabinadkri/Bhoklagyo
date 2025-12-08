@@ -10,16 +10,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
-
     @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)
     private String password;
 
-    @Column
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(name = "phone_number")
@@ -52,14 +49,6 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getName() {

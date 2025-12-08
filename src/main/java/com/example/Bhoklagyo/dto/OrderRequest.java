@@ -11,10 +11,11 @@ public class OrderRequest {
     private Double deliveryLatitude;
     private Double deliveryLongitude;
     private String feedback;
+    private String specialRequest;
 
     public OrderRequest() {}
 
-    public OrderRequest(Long customerId, Long restaurantId, List<Long> menuItemIds, OrderStatus status, Double deliveryLatitude, Double deliveryLongitude, String feedback) {
+    public OrderRequest(Long customerId, Long restaurantId, List<Long> menuItemIds, OrderStatus status, Double deliveryLatitude, Double deliveryLongitude, String feedback, String specialRequest) {
         this.customerId = customerId;
         this.restaurantId = restaurantId;
         this.menuItemIds = menuItemIds;
@@ -22,6 +23,7 @@ public class OrderRequest {
         this.deliveryLatitude = deliveryLatitude;
         this.deliveryLongitude = deliveryLongitude;
         this.feedback = feedback;
+        this.specialRequest = specialRequest;
     }
 
     public Long getCustomerId() {
@@ -78,5 +80,13 @@ public class OrderRequest {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
+    }
+
+    public String getSpecialRequest() {
+        return specialRequest;
+    }
+
+    public void setSpecialRequest(String specialRequest) {
+        this.specialRequest = specialRequest;
     }
 }

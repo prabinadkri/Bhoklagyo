@@ -46,7 +46,6 @@ public class OwnerRoleIntegrationTest {
     @DisplayName("1. Register Admin")
     void testRegisterAdmin() throws Exception {
         AdminRegisterRequest adminRequest = new AdminRegisterRequest();
-        adminRequest.setUsername("admin_owner_test");
         adminRequest.setName("Admin User");
         adminRequest.setPassword("admin123");
         adminRequest.setEmail("admin_owner@test.com");
@@ -71,7 +70,6 @@ public class OwnerRoleIntegrationTest {
     @DisplayName("2. Register Owner")
     void testRegisterOwner() throws Exception {
         RegisterRequest ownerRequest = new RegisterRequest();
-        ownerRequest.setUsername("owner_test");
         ownerRequest.setName("Restaurant Owner");
         ownerRequest.setPassword("owner123");
         ownerRequest.setEmail("owner@test.com");
@@ -99,7 +97,6 @@ public class OwnerRoleIntegrationTest {
     @DisplayName("3. Register Customer")
     void testRegisterCustomer() throws Exception {
         RegisterRequest customerRequest = new RegisterRequest();
-        customerRequest.setUsername("customer_owner_test");
         customerRequest.setName("Jane Customer");
         customerRequest.setPassword("customer123");
         customerRequest.setEmail("customer_owner@test.com");

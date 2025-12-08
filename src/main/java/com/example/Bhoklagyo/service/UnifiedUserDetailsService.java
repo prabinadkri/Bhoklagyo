@@ -27,29 +27,29 @@ public class UnifiedUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // Try to find as admin first
-        Optional<Admin> adminOpt = adminRepository.findByUsername(username);
+        Optional<Admin> adminOpt = adminRepository.findByEmail(email);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
             return new org.springframework.security.core.userdetails.User(
-                    admin.getUsername(),
+                    admin.getEmail(),
                     admin.getPassword(),
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
             );
         }
 
         // Try to find as regular user
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             return new org.springframework.security.core.userdetails.User(
-                    user.getUsername(),
+                    user.getEmail(),
                     user.getPassword(),
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
             );
         }
 
-        throw new UsernameNotFoundException("User not found: " + username);
+        throw new UsernameNotFoundException("User not found: " + email);
     }
 }

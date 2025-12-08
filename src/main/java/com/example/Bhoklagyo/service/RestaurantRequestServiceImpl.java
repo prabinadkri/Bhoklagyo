@@ -4,12 +4,14 @@ import com.example.Bhoklagyo.dto.RestaurantRequestDto;
 import com.example.Bhoklagyo.dto.RestaurantRequestResponse;
 import com.example.Bhoklagyo.entity.Request;
 import com.example.Bhoklagyo.entity.RequestStatus;
+import com.example.Bhoklagyo.entity.User;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.repository.RequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.example.Bhoklagyo.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,10 +20,17 @@ public class RestaurantRequestServiceImpl implements RestaurantRequestService {
 
     @Autowired
     private RequestRepository requestRepository;
+   
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     @Transactional
     public RestaurantRequestResponse createRequest(RestaurantRequestDto requestDto) {
+        if(requestDto.getEmailAddress() == null || requestDto.getEmailAddress().isEmpty()) {
+            User currentUser = getCurrentUser();
+            requestDto.setEmailAddress(currentUser.getEmail());
+        }
         Request request = new Request();
         request.setName(requestDto.getName());
         request.setRestaurantName(requestDto.getRestaurantName());
@@ -93,5 +102,10 @@ public class RestaurantRequestServiceImpl implements RestaurantRequestService {
         response.setDetails(request.getDetails());
         response.setStatus(request.getStatus());
         return response;
+    }
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 }

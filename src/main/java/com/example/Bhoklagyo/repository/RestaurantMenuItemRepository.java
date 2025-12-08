@@ -11,11 +11,16 @@ import java.util.Optional;
 
 @Repository
 public interface RestaurantMenuItemRepository extends JpaRepository<RestaurantMenuItem, Long> {
-    List<RestaurantMenuItem> findByRestaurantId(Long restaurantId);
+    @Query("SELECT rmi FROM RestaurantMenuItem rmi WHERE rmi.restaurant.id = :restaurantId ORDER BY rmi.id ASC")
+    List<RestaurantMenuItem> findByRestaurantId(@Param("restaurantId") Long restaurantId);
+    
     Optional<RestaurantMenuItem> findByRestaurantIdAndCategoryId(Long restaurantId, Long categoryId);
-    List<RestaurantMenuItem> findByCategoryId(Long categoryId);
+    
+    @Query("SELECT rmi FROM RestaurantMenuItem rmi WHERE rmi.category.id = :categoryId ORDER BY rmi.id ASC")
+    List<RestaurantMenuItem> findByCategoryId(@Param("categoryId") Long categoryId);
+    
     boolean existsByRestaurantIdAndCategoryId(Long restaurantId, Long categoryId);
     
-    @Query("SELECT rmi FROM RestaurantMenuItem rmi WHERE LOWER(rmi.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(rmi.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @Query("SELECT rmi FROM RestaurantMenuItem rmi WHERE LOWER(rmi.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(rmi.description) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY rmi.id ASC")
     List<RestaurantMenuItem> searchByNameOrDescription(@Param("keyword") String keyword);
 }

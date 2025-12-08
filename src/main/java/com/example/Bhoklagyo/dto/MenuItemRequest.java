@@ -11,10 +11,11 @@ public class MenuItemRequest {
     private Boolean isVegetarian;
     private String allergyWarnings;
     private Boolean isTodaySpecial;
+    private Boolean available;
 
     public MenuItemRequest() {}
 
-    public MenuItemRequest(Long categoryId, String categoryName, String name, String description, Double price, Double discountedPrice, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial) {
+    public MenuItemRequest(Long categoryId, String categoryName, String name, String description, Double price, Double discountedPrice, Boolean isVegan, Boolean isVegetarian, String allergyWarnings, Boolean isTodaySpecial, Boolean available) {
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.name = name;
@@ -25,6 +26,7 @@ public class MenuItemRequest {
         this.isVegetarian = isVegetarian;
         this.allergyWarnings = allergyWarnings;
         this.isTodaySpecial = isTodaySpecial;
+        this.available = available;
     }
 
     public Long getCategoryId() {
@@ -105,5 +107,13 @@ public class MenuItemRequest {
 
     public void setIsTodaySpecial(Boolean isTodaySpecial) {
         this.isTodaySpecial = isTodaySpecial;
+    }
+
+    public Boolean getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
     }
 }

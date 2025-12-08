@@ -1,5 +1,6 @@
 package com.example.Bhoklagyo.service;
 
+import com.example.Bhoklagyo.dto.AdminDashboardResponse;
 import com.example.Bhoklagyo.dto.AdminRegisterRequest;
 import com.example.Bhoklagyo.dto.AssignOwnerRequest;
 import com.example.Bhoklagyo.dto.LoginRequest;
@@ -25,7 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.example.Bhoklagyo.repository.OrderRepository;
 @Service
 public class AdminService {
 
@@ -36,11 +37,13 @@ public class AdminService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RestaurantMapper restaurantMapper;
+    private final OrderRepository orderRepository;
+    
 
     public AdminService(AdminRepository adminRepository, UserRepository userRepository,
                        RestaurantRepository restaurantRepository, PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil, AuthenticationManager authenticationManager,
-                       RestaurantMapper restaurantMapper) {
+                       RestaurantMapper restaurantMapper, OrderRepository orderRepository) {
         this.adminRepository = adminRepository;
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
@@ -48,15 +51,16 @@ public class AdminService {
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.restaurantMapper = restaurantMapper;
+        this.orderRepository = orderRepository;
+
     }
 
     public LoginResponse register(AdminRegisterRequest request) {
-        if (adminRepository.existsByUsername(request.getUsername())) {
-            throw new DuplicateResourceException("Username already exists");
+        if (adminRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Email already exists");
         }
 
         Admin admin = new Admin();
-        admin.setUsername(request.getUsername());
         admin.setName(request.getName());
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
         admin.setEmail(request.getEmail());
@@ -64,26 +68,26 @@ public class AdminService {
 
         Admin savedAdmin = adminRepository.save(admin);
 
-        String token = jwtUtil.generateToken(savedAdmin.getUsername(), "ADMIN");
+        String token = jwtUtil.generateToken(savedAdmin.getEmail(), "ADMIN");
 
-        return new LoginResponse(token, savedAdmin.getUsername(), "ADMIN", savedAdmin.getId());
+        return new LoginResponse(token, savedAdmin.getEmail(), savedAdmin.getName(), "ADMIN", savedAdmin.getId());
     }
 
     public LoginResponse login(LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (AuthenticationException e) {
-            throw new BadCredentialsException("Invalid username or password");
+            throw new BadCredentialsException("Invalid email or password");
         }
 
-        Admin admin = adminRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+        Admin admin = adminRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        String token = jwtUtil.generateToken(admin.getUsername(), "ADMIN");
+        String token = jwtUtil.generateToken(admin.getEmail(), "ADMIN");
 
-        return new LoginResponse(token, admin.getUsername(), "ADMIN", admin.getId());
+        return new LoginResponse(token, admin.getEmail(), admin.getName(), "ADMIN", admin.getId());
     }
 
     @Transactional
@@ -105,8 +109,15 @@ public class AdminService {
     }
 
     public Admin getCurrentAdmin() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return adminRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + username));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return adminRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + email));
+    }
+    public AdminDashboardResponse getAdminDashboard() {
+        long totalUsers = userRepository.count();
+        long totalRestaurants = restaurantRepository.count();
+        long totalOrders = orderRepository.count();
+        double totalRevenue = orderRepository.sumTotalRevenue();
+        return new AdminDashboardResponse(totalUsers, totalRestaurants, totalOrders, totalRevenue);
     }
 }

@@ -39,6 +39,7 @@ public class OrderMapper {
             order.getDeliveryLatitude(),
             order.getDeliveryLongitude(),
             order.getFeedback(),
+            order.getSpecialRequest(),
             order.getOrderTime()
         );
     }

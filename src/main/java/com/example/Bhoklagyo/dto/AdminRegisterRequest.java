@@ -1,7 +1,6 @@
 package com.example.Bhoklagyo.dto;
 
 public class AdminRegisterRequest {
-    private String username;
     private String name;
     private String password;
     private String email;
@@ -9,20 +8,11 @@ public class AdminRegisterRequest {
 
     public AdminRegisterRequest() {}
 
-    public AdminRegisterRequest(String username, String name, String password, String email, String phoneNumber) {
-        this.username = username;
+    public AdminRegisterRequest(String name, String password, String email, String phoneNumber) {
         this.name = name;
         this.password = password;
         this.email = email;
         this.phoneNumber = phoneNumber;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getName() {

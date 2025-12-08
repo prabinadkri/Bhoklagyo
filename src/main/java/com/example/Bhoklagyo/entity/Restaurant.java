@@ -19,6 +19,12 @@ public class Restaurant {
     @Column(name = "contact_number")
     private String contactNumber;
     
+    @Column(name = "is_featured", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isFeatured = false;
+    
+    @Column(name = "photo_url")
+    private String photoUrl;
+    
     @ManyToOne
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
@@ -87,6 +93,22 @@ public class Restaurant {
     
     public void setContactNumber(String contactNumber) {
         this.contactNumber = contactNumber;
+    }
+    
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+    
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
+    }
+    
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+    
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
     
     public Vendor getVendor() {

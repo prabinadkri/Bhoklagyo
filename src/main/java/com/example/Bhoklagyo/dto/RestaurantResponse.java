@@ -7,16 +7,20 @@ public class RestaurantResponse {
     private String name;
     private Double latitude;
     private Double longitude;
+    private Boolean isFeatured;
+    private String photoUrl;
     private List<String> cuisineTags;
     private List<String> dietaryTags;
 
     public RestaurantResponse() {}
 
-    public RestaurantResponse(Long id, String name, Double latitude, Double longitude, List<String> cuisineTags, List<String> dietaryTags) {
+    public RestaurantResponse(Long id, String name, Double latitude, Double longitude, Boolean isFeatured, String photoUrl, List<String> cuisineTags, List<String> dietaryTags) {
         this.id = id;
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.isFeatured = isFeatured;
+        this.photoUrl = photoUrl;
         this.cuisineTags = cuisineTags;
         this.dietaryTags = dietaryTags;
     }
@@ -51,6 +55,22 @@ public class RestaurantResponse {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
 
     public List<String> getCuisineTags() {

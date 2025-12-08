@@ -9,7 +9,8 @@ import com.example.Bhoklagyo.service.AdminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.example.Bhoklagyo.dto.AdminDashboardResponse;
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
@@ -35,6 +36,12 @@ public class AdminController {
     @PostMapping("/assign-owner")
     public ResponseEntity<RestaurantResponse> assignOwner(@RequestBody AssignOwnerRequest request) {
         RestaurantResponse response = adminService.assignOwnerToRestaurant(request);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminDashboardResponse> getAdminDashboard() {
+        AdminDashboardResponse response = adminService.getAdminDashboard();
         return ResponseEntity.ok(response);
     }
 }

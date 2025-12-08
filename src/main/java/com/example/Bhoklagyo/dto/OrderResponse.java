@@ -15,11 +15,12 @@ public class OrderResponse {
     private Double deliveryLatitude;
     private Double deliveryLongitude;
     private String feedback;
+    private String specialRequest;
     private LocalDateTime orderTime;
 
     public OrderResponse() {}
 
-    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, OrderStatus status, Double totalPrice, Double deliveryLatitude, Double deliveryLongitude, String feedback, LocalDateTime orderTime) {
+    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, OrderStatus status, Double totalPrice, Double deliveryLatitude, Double deliveryLongitude, String feedback, String specialRequest, LocalDateTime orderTime) {
         this.id = id;
         this.customerId = customerId;
         this.customerName = customerName;
@@ -30,6 +31,7 @@ public class OrderResponse {
         this.deliveryLatitude = deliveryLatitude;
         this.deliveryLongitude = deliveryLongitude;
         this.feedback = feedback;
+        this.specialRequest = specialRequest;
         this.orderTime = orderTime;
     }
 
@@ -111,6 +113,14 @@ public class OrderResponse {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
+    }
+
+    public String getSpecialRequest() {
+        return specialRequest;
+    }
+
+    public void setSpecialRequest(String specialRequest) {
+        this.specialRequest = specialRequest;
     }
 
     public LocalDateTime getOrderTime() {

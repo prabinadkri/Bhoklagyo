@@ -69,11 +69,15 @@ public class MenuItemServiceImpl implements MenuItemService {
                     category = categoryRepository.findById(request.getCategoryId())
                         .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
                 } else {
-                    // Check if category with this name already exists
-                    category = categoryRepository.findByName(request.getCategoryName())
+                    // Normalize category name: capitalize first letter of each word
+                    String normalizedCategoryName = capitalizeCategoryName(request.getCategoryName());
+                    
+                    // Check if category with this name already exists (case-insensitive)
+                    category = categoryRepository.findByNameIgnoreCase(normalizedCategoryName)
                         .orElseGet(() -> {
                             // Create new base Category if name doesn't exist
-                            Category newCategory = menuItemMapper.toEntity(request);
+                            Category newCategory = new Category();
+                            newCategory.setName(normalizedCategoryName);
                             return categoryRepository.save(newCategory);
                         });
                 }
@@ -121,6 +125,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         if (menuItemRequest.getIsTodaySpecial() != null) {
             restaurantMenuItem.setIsTodaySpecial(menuItemRequest.getIsTodaySpecial());
         }
+        if (menuItemRequest.getAvailable() != null) {
+            restaurantMenuItem.setAvailable(menuItemRequest.getAvailable());
+        }
         
         RestaurantMenuItem updated = restaurantMenuItemRepository.save(restaurantMenuItem);
         
@@ -139,12 +146,33 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
     
     private void verifyRestaurantOwner(Restaurant restaurant) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
         
         if (restaurant.getOwner() == null || !restaurant.getOwner().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You are not authorized to modify menu items for this restaurant. Only the restaurant owner can perform this action.");
         }
+    }
+    
+    private String capitalizeCategoryName(String categoryName) {
+        if (categoryName == null || categoryName.trim().isEmpty()) {
+            return categoryName;
+        }
+        
+        String[] words = categoryName.trim().split("\\s+");
+        StringBuilder result = new StringBuilder();
+        
+        for (String word : words) {
+            if (word.length() > 0) {
+                result.append(Character.toUpperCase(word.charAt(0)));
+                if (word.length() > 1) {
+                    result.append(word.substring(1).toLowerCase());
+                }
+                result.append(" ");
+            }
+        }
+        
+        return result.toString().trim();
     }
 }

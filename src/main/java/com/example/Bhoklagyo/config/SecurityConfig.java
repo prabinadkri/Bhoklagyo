@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/restaurants/{id}").permitAll()
                         .requestMatchers("/restaurants/{id}/menu").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/ws", "/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

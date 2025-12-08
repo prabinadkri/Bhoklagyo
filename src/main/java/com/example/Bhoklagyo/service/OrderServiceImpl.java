@@ -32,17 +32,20 @@ public class OrderServiceImpl implements OrderService {
     private final RestaurantMenuItemRepository restaurantMenuItemRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final com.example.Bhoklagyo.websocket.OrderEventSender orderEventSender;
     
     public OrderServiceImpl(OrderRepository orderRepository,
                            RestaurantRepository restaurantRepository,
                            RestaurantMenuItemRepository restaurantMenuItemRepository,
                            UserRepository userRepository,
-                           OrderMapper orderMapper) {
+                           OrderMapper orderMapper,
+                           com.example.Bhoklagyo.websocket.OrderEventSender orderEventSender) {
         this.orderRepository = orderRepository;
         this.restaurantRepository = restaurantRepository;
         this.restaurantMenuItemRepository = restaurantMenuItemRepository;
         this.userRepository = userRepository;
         this.orderMapper = orderMapper;
+        this.orderEventSender = orderEventSender;
     }
     
     @Override
@@ -92,7 +95,18 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderTime(LocalDateTime.now());
         
         Order savedOrder = orderRepository.save(order);
-        return orderMapper.toResponse(savedOrder);
+        OrderResponse response = orderMapper.toResponse(savedOrder);
+
+        // Notify the customer (user-specific queue) and the restaurant topic
+        try {
+            orderEventSender.sendOrderToCustomer(customer.getId(), response);
+            orderEventSender.sendOrderToRestaurant(restaurant.getId(), response);
+        } catch (Exception e) {
+            // Do not fail the request if notification fails; just log
+            System.err.println("Failed to send order websocket event: " + e.getMessage());
+        }
+
+        return response;
     }
     
     @Override
@@ -169,7 +183,19 @@ public class OrderServiceImpl implements OrderService {
         
         order.setStatus(status);
         Order updatedOrder = orderRepository.save(order);
-        return orderMapper.toResponse(updatedOrder);
+        OrderResponse response = orderMapper.toResponse(updatedOrder);
+
+        // Notify interested parties about status update
+        try {
+            // Notify the customer
+            orderEventSender.sendOrderToCustomer(updatedOrder.getCustomer().getId(), response);
+            // Notify restaurant topic subscribers
+            orderEventSender.sendOrderToRestaurant(updatedOrder.getRestaurant().getId(), response);
+        } catch (Exception e) {
+            System.err.println("Failed to send order status websocket event: " + e.getMessage());
+        }
+
+        return response;
     }
 
     @Override

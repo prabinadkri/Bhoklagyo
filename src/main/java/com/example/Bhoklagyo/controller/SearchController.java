@@ -1,7 +1,6 @@
 package com.example.Bhoklagyo.controller;
 
 import com.example.Bhoklagyo.dto.PaginatedSearchResultResponse;
-import com.example.Bhoklagyo.dto.SearchResultResponse;
 import com.example.Bhoklagyo.service.SearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

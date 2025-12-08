@@ -177,6 +177,18 @@ public class RestaurantServiceImpl implements RestaurantService {
             .collect(Collectors.toList());
     }
     
+    @Override
+    @Transactional
+    public RestaurantResponse updateRestaurantImage(Long restaurantId, String imagePath) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
+        
+        restaurant.setPhotoUrl(imagePath);
+        Restaurant updatedRestaurant = restaurantRepository.save(restaurant);
+        
+        return restaurantMapper.toResponse(updatedRestaurant);
+    }
+    
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)

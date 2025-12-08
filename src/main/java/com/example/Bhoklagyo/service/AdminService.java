@@ -8,15 +8,20 @@ import com.example.Bhoklagyo.dto.LoginResponse;
 import com.example.Bhoklagyo.dto.RestaurantResponse;
 import com.example.Bhoklagyo.entity.Admin;
 import com.example.Bhoklagyo.entity.Restaurant;
+import com.example.Bhoklagyo.entity.RestaurantMenuItem;
 import com.example.Bhoklagyo.entity.User;
 import com.example.Bhoklagyo.entity.Role;
 import com.example.Bhoklagyo.exception.DuplicateResourceException;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.RestaurantMapper;
+import com.example.Bhoklagyo.mapper.UserMapper;
 import com.example.Bhoklagyo.repository.AdminRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.security.JwtUtil;
+
+import java.io.File;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +32,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.Bhoklagyo.repository.OrderRepository;
+import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
+import com.example.Bhoklagyo.dto.UserResponse;
 @Service
 public class AdminService {
 
@@ -38,12 +45,14 @@ public class AdminService {
     private final AuthenticationManager authenticationManager;
     private final RestaurantMapper restaurantMapper;
     private final OrderRepository orderRepository;
+    private final RestaurantMenuItemRepository menuItemRepository;
+    private final UserMapper userMapper;
     
 
     public AdminService(AdminRepository adminRepository, UserRepository userRepository,
                        RestaurantRepository restaurantRepository, PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil, AuthenticationManager authenticationManager,
-                       RestaurantMapper restaurantMapper, OrderRepository orderRepository) {
+                       RestaurantMapper restaurantMapper, OrderRepository orderRepository,RestaurantMenuItemRepository menuItemRepository, UserMapper userMapper) {
         this.adminRepository = adminRepository;
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
@@ -52,7 +61,8 @@ public class AdminService {
         this.authenticationManager = authenticationManager;
         this.restaurantMapper = restaurantMapper;
         this.orderRepository = orderRepository;
-
+        this.menuItemRepository = menuItemRepository;
+        this.userMapper = userMapper;
     }
 
     public LoginResponse register(AdminRegisterRequest request) {
@@ -95,8 +105,10 @@ public class AdminService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
 
+        // Admin has authority to change user role to OWNER when assigning to restaurant
         if (user.getRole() != Role.OWNER) {
-            throw new IllegalArgumentException("User must have OWNER role to be assigned as restaurant owner");
+            user.setRole(Role.OWNER);
+            userRepository.save(user);
         }
 
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
@@ -119,5 +131,28 @@ public class AdminService {
         long totalOrders = orderRepository.count();
         double totalRevenue = orderRepository.sumTotalRevenue();
         return new AdminDashboardResponse(totalUsers, totalRestaurants, totalOrders, totalRevenue);
+    }
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        userRepository.delete(user);
+    }
+    @Transactional
+    public void deleteRestaurant(Long restaurantId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
+        menuItemRepository.deleteByRestaurantId(restaurantId);
+        
+        restaurantRepository.delete(restaurant);
+}
+    @Transactional
+    public UserResponse changeUserRole(Long userId, Role newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        
+        user.setRole(newRole);
+        User updatedUser = userRepository.save(user);
+        return userMapper.toResponse(updatedUser);
     }
 }

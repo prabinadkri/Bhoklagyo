@@ -8,10 +8,12 @@ import com.example.Bhoklagyo.repository.RestaurantRepository;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.security.InviteTokenUtil;
 import com.example.Bhoklagyo.service.EmailService;
+import com.example.Bhoklagyo.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import com.example.Bhoklagyo.dto.RestaurantRequest;
 import com.example.Bhoklagyo.dto.RestaurantResponse;
 import com.example.Bhoklagyo.dto.MenuItemRequest;
@@ -35,6 +37,7 @@ public class RestaurantController {
     private final InviteTokenUtil inviteTokenUtil;
     private final EmailService emailService;
     private final UserMapper userMapper;
+    private final FileStorageService fileStorageService;
 
     public RestaurantController(RestaurantService restaurantService,
                                 MenuItemService menuItemService,
@@ -42,7 +45,8 @@ public class RestaurantController {
                                 RestaurantRepository restaurantRepository,
                                 InviteTokenUtil inviteTokenUtil,
                                 EmailService emailService,
-                                UserMapper userMapper) {
+                                UserMapper userMapper,
+                                FileStorageService fileStorageService) {
         this.restaurantService = restaurantService;
         this.menuItemService = menuItemService;
         this.userRepository = userRepository;
@@ -50,6 +54,7 @@ public class RestaurantController {
         this.inviteTokenUtil = inviteTokenUtil;
         this.emailService = emailService;
         this.userMapper = userMapper;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping
@@ -150,6 +155,32 @@ public class RestaurantController {
         emailService.sendInviteEmail(request.getEmail(), token,restaurant.getName());
         return ResponseEntity.ok(Map.of("message", "Invitation sent"));
         }
+
+    @PostMapping("/{id}/upload-image")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
+    public ResponseEntity<RestaurantResponse> uploadRestaurantImage(
+            @PathVariable Long id,
+            @RequestParam("image") MultipartFile file) {
+        
+        // Validate file
+        if (file.isEmpty()) {
+            throw new RuntimeException("Please select a file to upload");
+        }
+        
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new RuntimeException("Only image files are allowed");
+        }
+        
+        // Store file and get filename
+        String fileName = fileStorageService.storeFile(file);
+        
+        // Update restaurant with relative image path
+        RestaurantResponse response = restaurantService.updateRestaurantImage(id, "/uploads/restaurant-images/" + fileName);
+        
+        return ResponseEntity.ok(response);
+    }
 
     
 }

@@ -13,4 +13,5 @@ public interface RestaurantService {
     PaginatedRestaurantResponse getAllRestaurantsPaginated(Long cursor, Integer limit);
     List<RestaurantResponse> getFeaturedRestaurants();
     List<RestaurantResponse> getRestaurantsByOwnerId(Long ownerId);
+    RestaurantResponse updateRestaurantImage(Long restaurantId, String imagePath);
 }

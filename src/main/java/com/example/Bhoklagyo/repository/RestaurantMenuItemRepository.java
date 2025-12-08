@@ -23,4 +23,6 @@ public interface RestaurantMenuItemRepository extends JpaRepository<RestaurantMe
     
     @Query("SELECT rmi FROM RestaurantMenuItem rmi WHERE LOWER(rmi.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(rmi.description) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY rmi.id ASC")
     List<RestaurantMenuItem> searchByNameOrDescription(@Param("keyword") String keyword);
+
+    void deleteByRestaurantId(Long restaurantId);
 }

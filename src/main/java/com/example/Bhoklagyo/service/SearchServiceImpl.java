@@ -192,21 +192,9 @@ public class SearchServiceImpl implements SearchService {
                 .filter(r -> mergedRestaurants.stream().noneMatch(existing -> existing.getId().equals(r.getId())))
                 .forEach(mergedRestaurants::add);
 
-        // Sort merged results by rating DESC, id ASC
-        List<Restaurant> sortedRestaurants = mergedRestaurants.stream()
-                .sorted((r1, r2) -> {
-                    int ratingCompare = Double.compare(r2.getRating() != null ? r2.getRating() : 0.0,
-                                                     r1.getRating() != null ? r1.getRating() : 0.0);
-                    if (ratingCompare == 0) {
-                        return Long.compare(r1.getId(), r2.getId());
-                    }
-                    return ratingCompare;
-                })
-                .collect(Collectors.toList());
-
-        // Results are now properly sorted
-        boolean hasMore = sortedRestaurants.size() > limit;
-        List<Restaurant> finalRestaurants = hasMore ? sortedRestaurants.subList(0, limit) : sortedRestaurants;
+        // Results are already sorted by rating DESC, id ASC from repository
+        boolean hasMore = mergedRestaurants.size() > limit;
+        List<Restaurant> finalRestaurants = hasMore ? mergedRestaurants.subList(0, limit) : mergedRestaurants;
 
         List<RestaurantResponse> restaurantResponses = finalRestaurants.stream()
                 .map(restaurantMapper::toResponse)

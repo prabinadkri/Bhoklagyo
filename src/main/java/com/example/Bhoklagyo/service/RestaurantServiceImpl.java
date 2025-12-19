@@ -188,6 +188,22 @@ public class RestaurantServiceImpl implements RestaurantService {
         
         return restaurantMapper.toResponse(updatedRestaurant);
     }
+    @Override
+    @Transactional
+    public RestaurantResponse setRestaurantIsOpen(Long restaurantId, Boolean isOpen) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
+
+        User current = getCurrentUser();
+        boolean isOwner = restaurant.getOwner() != null && restaurant.getOwner().getId().equals(current.getId());
+        if (!isOwner) {
+            throw new AccessDeniedException("Forbidden: not restaurant owner");
+        }
+
+        restaurant.setIsOpen(isOpen != null ? isOpen : Boolean.FALSE);
+        Restaurant updated = restaurantRepository.save(restaurant);
+        return restaurantMapper.toResponse(updated);
+    }
     
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

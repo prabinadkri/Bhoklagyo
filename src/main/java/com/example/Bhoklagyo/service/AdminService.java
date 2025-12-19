@@ -20,8 +20,11 @@ import com.example.Bhoklagyo.repository.RestaurantRepository;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.security.JwtUtil;
 
+import jakarta.persistence.EntityManager;
+
 import java.io.File;
 
+import jakarta.persistence.Query;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.Bhoklagyo.repository.OrderRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.dto.UserResponse;
+
 @Service
 public class AdminService {
 
@@ -47,12 +51,13 @@ public class AdminService {
     private final OrderRepository orderRepository;
     private final RestaurantMenuItemRepository menuItemRepository;
     private final UserMapper userMapper;
+    private final EntityManager em;
     
 
     public AdminService(AdminRepository adminRepository, UserRepository userRepository,
                        RestaurantRepository restaurantRepository, PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil, AuthenticationManager authenticationManager,
-                       RestaurantMapper restaurantMapper, OrderRepository orderRepository,RestaurantMenuItemRepository menuItemRepository, UserMapper userMapper) {
+                       RestaurantMapper restaurantMapper, OrderRepository orderRepository,RestaurantMenuItemRepository menuItemRepository, UserMapper userMapper, EntityManager em) {
         this.adminRepository = adminRepository;
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
@@ -63,6 +68,7 @@ public class AdminService {
         this.orderRepository = orderRepository;
         this.menuItemRepository = menuItemRepository;
         this.userMapper = userMapper;
+        this.em = em;
     }
 
     public LoginResponse register(AdminRegisterRequest request) {
@@ -129,7 +135,11 @@ public class AdminService {
         long totalUsers = userRepository.count();
         long totalRestaurants = restaurantRepository.count();
         long totalOrders = orderRepository.count();
-        double totalRevenue = orderRepository.sumTotalRevenue();
+        String sql="SELECT COALESCE(SUM(oi.price_at_order * oi.quantity),0) FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.status IN ('DELIVERED', 'COMPLETED')";
+        Query query = em.createNativeQuery(sql);
+        Object total = query.getSingleResult();
+        if (total == null) {return  null;}
+        double totalRevenue = ((Number) total).doubleValue();
         return new AdminDashboardResponse(totalUsers, totalRestaurants, totalOrders, totalRevenue);
     }
     @Transactional

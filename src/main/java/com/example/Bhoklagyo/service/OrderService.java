@@ -13,4 +13,5 @@ public interface OrderService {
     List<OrderResponse> getOrdersByCustomerId(Long customerId);
     OrderResponse updateOrderStatus(Long restaurantId, Long orderId, OrderStatus status);
     OrderResponse submitOrderFeedback(Long customerId, Long orderId, String feedback);
+    OrderResponse submitOrderFeedback(Long customerId, Long orderId, String feedback, Integer rating);
 }

@@ -9,28 +9,30 @@ public class OrderResponse {
     private Long customerId;
     private String customerName;
     private Long restaurantId;
-    private List<MenuItemResponse> menuItems;
+    private List<OrderItemResponse> items;
     private OrderStatus status;
     private Double totalPrice;
     private Double deliveryLatitude;
     private Double deliveryLongitude;
     private String feedback;
+    private Integer rating;
     private String specialRequest;
     private LocalDateTime orderTime;
 
     public OrderResponse() {}
 
-    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<MenuItemResponse> menuItems, OrderStatus status, Double totalPrice, Double deliveryLatitude, Double deliveryLongitude, String feedback, String specialRequest, LocalDateTime orderTime) {
+    public OrderResponse(Long id, Long customerId, String customerName, Long restaurantId, List<OrderItemResponse> items, OrderStatus status, Double totalPrice, Double deliveryLatitude, Double deliveryLongitude, String feedback, Integer rating, String specialRequest, LocalDateTime orderTime) {
         this.id = id;
         this.customerId = customerId;
         this.customerName = customerName;
         this.restaurantId = restaurantId;
-        this.menuItems = menuItems;
+        this.items = items;
         this.status = status;
         this.totalPrice = totalPrice;
         this.deliveryLatitude = deliveryLatitude;
         this.deliveryLongitude = deliveryLongitude;
         this.feedback = feedback;
+        this.rating = rating;
         this.specialRequest = specialRequest;
         this.orderTime = orderTime;
     }
@@ -67,12 +69,12 @@ public class OrderResponse {
         this.restaurantId = restaurantId;
     }
 
-    public List<MenuItemResponse> getMenuItems() {
-        return menuItems;
+    public List<OrderItemResponse> getItems() {
+        return items;
     }
 
-    public void setMenuItems(List<MenuItemResponse> menuItems) {
-        this.menuItems = menuItems;
+    public void setItems(List<OrderItemResponse> items) {
+        this.items = items;
     }
 
     public OrderStatus getStatus() {
@@ -113,6 +115,14 @@ public class OrderResponse {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
     }
 
     public String getSpecialRequest() {

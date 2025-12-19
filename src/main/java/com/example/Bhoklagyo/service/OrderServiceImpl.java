@@ -5,6 +5,7 @@ import com.example.Bhoklagyo.dto.OrderResponse;
 import com.example.Bhoklagyo.entity.User;
 import com.example.Bhoklagyo.entity.RestaurantMenuItem;
 import com.example.Bhoklagyo.entity.Order;
+import com.example.Bhoklagyo.entity.OrderItem;
 import com.example.Bhoklagyo.entity.OrderStatus;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.entity.Role;
@@ -62,45 +63,45 @@ public class OrderServiceImpl implements OrderService {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
         
-        // Find RestaurantMenuItem for each menuItemId and validate they belong to this restaurant
-        List<RestaurantMenuItem> restaurantMenuItems = request.getMenuItemIds().stream()
-            .map(menuItemId -> {
-                RestaurantMenuItem menuItem = restaurantMenuItemRepository.findById(menuItemId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + menuItemId));
-                
-                // Validate that the menu item belongs to the specified restaurant
-                if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
-                    throw new ResourceNotFoundException("Menu item with id " + menuItemId + " does not belong to restaurant with id " + restaurantId);
-                }
-                
-                return menuItem;
-            })
-            .collect(Collectors.toList());
-        
-        // Calculate total price using effective price (discounted if available, else regular price)
-        Double totalPrice = restaurantMenuItems.stream()
-            .map(RestaurantMenuItem::getEffectivePrice)
-            .reduce(0.0, Double::sum);
-        
+        // Create order first
         Order order = new Order();
         order.setCustomer(customer);
         order.setRestaurant(restaurant);
-        order.setOrderItems(restaurantMenuItems);
         order.setStatus(request.getStatus());
-        order.setTotalPrice(totalPrice);
         order.setDeliveryLatitude(request.getDeliveryLatitude());
         order.setDeliveryLongitude(request.getDeliveryLongitude());
         order.setFeedback(request.getFeedback());
         order.setSpecialRequest(request.getSpecialRequest());
         order.setOrderTime(LocalDateTime.now());
         
+        // Create OrderItem entities with quantities and calculate total
+        double totalPrice = 0.0;
+        for (var itemRequest : request.getItems()) {
+            RestaurantMenuItem menuItem = restaurantMenuItemRepository.findById(itemRequest.getMenuItemId())
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + itemRequest.getMenuItemId()));
+            
+            // Validate that the menu item belongs to the specified restaurant
+            if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+                throw new ResourceNotFoundException("Menu item with id " + itemRequest.getMenuItemId() + " does not belong to restaurant with id " + restaurantId);
+            }
+            
+            Double priceAtOrder = menuItem.getEffectivePrice();
+            OrderItem orderItem = new OrderItem(order, menuItem, itemRequest.getQuantity(), priceAtOrder);
+            order.addOrderItem(orderItem);
+            
+            totalPrice += orderItem.getSubtotal();
+        }
+        
+        order.setTotalPrice(totalPrice);
+        
         Order savedOrder = orderRepository.save(order);
         OrderResponse response = orderMapper.toResponse(savedOrder);
 
         // Notify the customer (user-specific queue) and the restaurant topic
         try {
-            orderEventSender.sendOrderToCustomer(customer.getId(), response);
-            orderEventSender.sendOrderToRestaurant(restaurant.getId(), response);
+            // At creation: send CREATED notification to restaurant only
+            // (no customer websocket notification on create to avoid duplicate/extra notifications)
+            orderEventSender.sendOrderCreatedToRestaurant(restaurant.getId(), response);
         } catch (Exception e) {
             // Do not fail the request if notification fails; just log
             System.err.println("Failed to send order websocket event: " + e.getMessage());
@@ -187,10 +188,8 @@ public class OrderServiceImpl implements OrderService {
 
         // Notify interested parties about status update
         try {
-            // Notify the customer
+            // On status update: notify the customer only (restaurant already knows about order)
             orderEventSender.sendOrderToCustomer(updatedOrder.getCustomer().getId(), response);
-            // Notify restaurant topic subscribers
-            orderEventSender.sendOrderToRestaurant(updatedOrder.getRestaurant().getId(), response);
         } catch (Exception e) {
             System.err.println("Failed to send order status websocket event: " + e.getMessage());
         }
@@ -199,24 +198,68 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse submitOrderFeedback(Long customerId, Long orderId, String feedback) {
+    public OrderResponse submitOrderFeedback(Long customerId, Long orderId, String feedback, Integer rating) {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        
+
         // Validate that the order belongs to the specified customer
         if (!order.getCustomer().getId().equals(customerId)) {
             throw new ResourceNotFoundException("Order with id " + orderId + " does not belong to customer with id " + customerId);
         }
-        
+
         // Authorization: Users can only submit feedback for their own orders
         User currentUser = getCurrentUser();
         if (!currentUser.getId().equals(customerId)) {
             throw new AccessDeniedException("You can only submit feedback for your own orders");
         }
-        
+
+        // Set feedback text
         order.setFeedback(feedback);
+
+        // Handle rating if provided (1-5)
+        if (rating != null) {
+            if (rating < 1 || rating > 5) {
+                throw new IllegalArgumentException("Rating must be between 1 and 5");
+            }
+
+            Restaurant restaurant = order.getRestaurant();
+            if (restaurant == null) {
+                throw new ResourceNotFoundException("Associated restaurant not found for order id: " + orderId);
+            }
+
+            Long prevTotal = restaurant.getTotalRating() != null ? restaurant.getTotalRating() : 0L;
+            Long prevCount = restaurant.getTotalCount() != null ? restaurant.getTotalCount() : 0L;
+            Integer prevOrderRating = order.getRating();
+
+            if (prevOrderRating == null) {
+                // New rating
+                prevTotal += rating;
+                prevCount += 1;
+            } else {
+                // Overwrite existing rating for this order
+                prevTotal = prevTotal - prevOrderRating + rating;
+            }
+
+            // Update restaurant aggregates
+            restaurant.setTotalRating(prevTotal);
+            restaurant.setTotalCount(prevCount);
+            double avg = prevCount > 0 ? ((double) prevTotal) / prevCount : 0.0;
+            restaurant.setRating(avg);
+
+            // Persist restaurant changes
+            restaurantRepository.save(restaurant);
+
+            // Persist rating on order
+            order.setRating(rating);
+        }
+
         Order updatedOrder = orderRepository.save(order);
         return orderMapper.toResponse(updatedOrder);
+    }
+
+    @Override
+    public OrderResponse submitOrderFeedback(Long customerId, Long orderId, String feedback) {
+        return submitOrderFeedback(customerId, orderId, feedback, null);
     }
     
     private User getCurrentUser() {

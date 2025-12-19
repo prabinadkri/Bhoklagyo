@@ -4,6 +4,8 @@ import com.example.Bhoklagyo.dto.*;
 import com.example.Bhoklagyo.entity.OrderStatus;
 import com.example.Bhoklagyo.entity.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -216,7 +218,7 @@ public class CustomerRoleIntegrationTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setCustomerId(customerId);
         orderRequest.setRestaurantId(restaurantId);
-        orderRequest.setMenuItemIds(Arrays.asList(999L)); // Non-existent menu item
+        orderRequest.setItems(Arrays.asList(new OrderItemRequest())); // Non-existent menu item
         orderRequest.setStatus(OrderStatus.PENDING);
         orderRequest.setDeliveryLatitude(27.7172);
         orderRequest.setDeliveryLongitude(85.3240);
@@ -297,7 +299,7 @@ public class CustomerRoleIntegrationTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setCustomerId(customerId);
         orderRequest.setRestaurantId(restaurantId);
-        orderRequest.setMenuItemIds(Arrays.asList(1L));
+        orderRequest.setItems(Arrays.asList(new OrderItemRequest()));
 
         mockMvc.perform(post("/restaurants/" + restaurantId + "/orders")
                 .contentType(MediaType.APPLICATION_JSON)

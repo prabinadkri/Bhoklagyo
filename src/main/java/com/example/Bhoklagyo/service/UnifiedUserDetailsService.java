@@ -39,7 +39,6 @@ public class UnifiedUserDetailsService implements UserDetailsService {
             );
         }
 
-        // Try to find as regular user
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();

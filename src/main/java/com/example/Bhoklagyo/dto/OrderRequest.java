@@ -6,7 +6,7 @@ import java.util.List;
 public class OrderRequest {
     private Long customerId;
     private Long restaurantId;
-    private List<Long> menuItemIds;
+    private List<OrderItemRequest> items;
     private OrderStatus status;
     private Double deliveryLatitude;
     private Double deliveryLongitude;
@@ -15,10 +15,10 @@ public class OrderRequest {
 
     public OrderRequest() {}
 
-    public OrderRequest(Long customerId, Long restaurantId, List<Long> menuItemIds, OrderStatus status, Double deliveryLatitude, Double deliveryLongitude, String feedback, String specialRequest) {
+    public OrderRequest(Long customerId, Long restaurantId, List<OrderItemRequest> items, OrderStatus status, Double deliveryLatitude, Double deliveryLongitude, String feedback, String specialRequest) {
         this.customerId = customerId;
         this.restaurantId = restaurantId;
-        this.menuItemIds = menuItemIds;
+        this.items = items;
         this.status = status;
         this.deliveryLatitude = deliveryLatitude;
         this.deliveryLongitude = deliveryLongitude;
@@ -42,12 +42,12 @@ public class OrderRequest {
         this.restaurantId = restaurantId;
     }
 
-    public List<Long> getMenuItemIds() {
-        return menuItemIds;
+    public List<OrderItemRequest> getItems() {
+        return items;
     }
 
-    public void setMenuItemIds(List<Long> menuItemIds) {
-        this.menuItemIds = menuItemIds;
+    public void setItems(List<OrderItemRequest> items) {
+        this.items = items;
     }
 
     public OrderStatus getStatus() {

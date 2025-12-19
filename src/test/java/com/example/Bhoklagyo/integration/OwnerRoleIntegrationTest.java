@@ -305,7 +305,7 @@ public class OwnerRoleIntegrationTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setCustomerId(customerId);
         orderRequest.setRestaurantId(restaurantId);
-        orderRequest.setMenuItemIds(Arrays.asList(menuItemId));
+        orderRequest.setItems(Arrays.asList(new OrderItemRequest(menuItemId, 2)));
         orderRequest.setStatus(OrderStatus.PENDING);
         orderRequest.setDeliveryLatitude(27.7172);
         orderRequest.setDeliveryLongitude(85.3240);

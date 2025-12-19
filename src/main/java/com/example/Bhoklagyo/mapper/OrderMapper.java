@@ -1,6 +1,6 @@
 package com.example.Bhoklagyo.mapper;
 
-import com.example.Bhoklagyo.dto.MenuItemResponse;
+import com.example.Bhoklagyo.dto.OrderItemResponse;
 import com.example.Bhoklagyo.dto.OrderResponse;
 
 import com.example.Bhoklagyo.entity.Order;
@@ -23,9 +23,15 @@ public class OrderMapper {
         Long customerId = order.getCustomer() != null ? order.getCustomer().getId() : null;
         String customerName = order.getCustomer() != null ? order.getCustomer().getName() : null;
         
-        List<MenuItemResponse> menuItemResponses = order.getOrderItems()
+        List<OrderItemResponse> orderItemResponses = order.getOrderItems()
             .stream()
-            .map(menuItemMapper::toResponse)
+            .map(orderItem -> new OrderItemResponse(
+                orderItem.getId(),
+                menuItemMapper.toResponse(orderItem.getMenuItem()),
+                orderItem.getQuantity(),
+                orderItem.getPriceAtOrder(),
+                orderItem.getSubtotal()
+            ))
             .collect(Collectors.toList());
         
         return new OrderResponse(
@@ -33,12 +39,13 @@ public class OrderMapper {
             customerId,
             customerName,
             restaurantId,
-            menuItemResponses,
+            orderItemResponses,
             order.getStatus(),
             order.getTotalPrice(),
             order.getDeliveryLatitude(),
             order.getDeliveryLongitude(),
             order.getFeedback(),
+            order.getRating(),
             order.getSpecialRequest(),
             order.getOrderTime()
         );

@@ -182,5 +182,20 @@ public class RestaurantController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/{id}/is-open")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<RestaurantResponse> updateIsOpen(@PathVariable Long id,
+                                                           @RequestBody Map<String, Boolean> body,
+                                                           Authentication authentication) {
+        Boolean isOpen = body.get("isOpen");
+        if (isOpen == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        RestaurantResponse response = restaurantService.setRestaurantIsOpen(id, isOpen);
+        return ResponseEntity.ok(response);
+    }
+
+    
     
 }

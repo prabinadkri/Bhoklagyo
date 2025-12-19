@@ -14,4 +14,5 @@ public interface RestaurantService {
     List<RestaurantResponse> getFeaturedRestaurants();
     List<RestaurantResponse> getRestaurantsByOwnerId(Long ownerId);
     RestaurantResponse updateRestaurantImage(Long restaurantId, String imagePath);
+    RestaurantResponse setRestaurantIsOpen(Long restaurantId, Boolean isOpen);
 }

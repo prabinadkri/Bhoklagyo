@@ -94,13 +94,9 @@ public class SearchServiceImpl implements SearchService {
             .filter(r -> mergedRestaurants.stream().noneMatch(existing -> existing.getId().equals(r.getId())))
             .forEach(mergedRestaurants::add);
         
-        // Sort by ID and limit
-        List<Restaurant> sortedRestaurants = mergedRestaurants.stream()
-            .sorted((r1, r2) -> r1.getId().compareTo(r2.getId()))
-            .collect(Collectors.toList());
-        
-        boolean hasMore = sortedRestaurants.size() > limit;
-        List<Restaurant> finalRestaurants = hasMore ? sortedRestaurants.subList(0, limit) : sortedRestaurants;
+        // Results are already sorted by ID from repository
+        boolean hasMore = mergedRestaurants.size() > limit;
+        List<Restaurant> finalRestaurants = hasMore ? mergedRestaurants.subList(0, limit) : mergedRestaurants;
         
         List<RestaurantResponse> restaurantResponses = finalRestaurants.stream()
             .map(restaurantMapper::toResponse)
@@ -119,6 +115,166 @@ public class SearchServiceImpl implements SearchService {
             .map(menuItemMapper::toResponse)
             .collect(Collectors.toList());
         
+        return new PaginatedSearchResultResponse(paginatedRestaurants, new PaginatedSearchResultResponse.MenuItemSearchResponse(menuItemResponses));
+    }
+
+    @Override
+    public PaginatedSearchResultResponse searchPaginatedByLocation(String keyword, Double latitude, Double longitude, Long cursorId, Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 20;
+        }
+
+        // Fetch one extra to determine if there are more results
+        int fetch = limit + 1;
+
+        double lat = (latitude == null) ? 0.0 : latitude;
+        double lon = (longitude == null) ? 0.0 : longitude;
+
+        List<Restaurant> restaurants = restaurantRepository.searchByKeywordOrderByDistanceNativeWithCursor(keyword, lat, lon, cursorId, fetch);
+
+        boolean hasMore = restaurants.size() > limit;
+        List<Restaurant> finalRestaurants = hasMore ? restaurants.subList(0, limit) : restaurants;
+
+        List<RestaurantResponse> restaurantResponses = finalRestaurants.stream()
+            .map(restaurantMapper::toResponse)
+            .collect(Collectors.toList());
+
+        Long nextCursor = null;
+        if (hasMore && !finalRestaurants.isEmpty()) {
+            nextCursor = finalRestaurants.get(finalRestaurants.size() - 1).getId();
+        }
+
+        PaginatedRestaurantResponse paginatedRestaurants = new PaginatedRestaurantResponse(restaurantResponses, nextCursor, hasMore);
+
+        // Menu items: return matches ordered by nearest restaurant first (not paginated)
+        List<RestaurantMenuItem> menuItems = restaurantMenuItemRepository.searchByNameOrDescriptionOrderByRestaurantDistance(keyword, lat, lon, limit);
+        List<MenuItemResponse> menuItemResponses = menuItems.stream()
+            .map(menuItemMapper::toResponse)
+            .collect(Collectors.toList());
+
+        return new PaginatedSearchResultResponse(paginatedRestaurants, new PaginatedSearchResultResponse.MenuItemSearchResponse(menuItemResponses));
+    }
+    @Override
+    public PaginatedSearchResultResponse searchPaginatedByRating(String keyword, Long cursor, Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 20;
+        }
+        // Fetch one extra to determine if there are more results
+        Pageable pageable = PageRequest.of(0, limit + 1);
+
+        List<Restaurant> restaurantsByName;
+        List<Restaurant> restaurantsByCuisine;
+
+        if (cursor == null) {
+            restaurantsByName = restaurantRepository.searchByNameRated(keyword, pageable);
+            restaurantsByCuisine = restaurantRepository.searchByCuisineTagRated(keyword, pageable);
+        } else {
+            // Resolve cursor rating from restaurant id
+            Double cursorRating = 0.0;
+            try {
+                Restaurant cursorRestaurant = restaurantRepository.findById(cursor).orElse(null);
+                if (cursorRestaurant != null && cursorRestaurant.getRating() != null) {
+                    cursorRating = cursorRestaurant.getRating();
+                }
+            } catch (Exception e) {
+                cursorRating = 0.0;
+            }
+
+            restaurantsByName = restaurantRepository.searchByNameWithCursorRated(keyword, cursorRating, cursor, pageable);
+            restaurantsByCuisine = restaurantRepository.searchByCuisineTagWithCursorRated(keyword, cursorRating, cursor, pageable);
+        }
+
+        // Merge and deduplicate results
+        List<Restaurant> mergedRestaurants = restaurantsByName.stream()
+                .collect(Collectors.toList());
+
+        restaurantsByCuisine.stream()
+                .filter(r -> mergedRestaurants.stream().noneMatch(existing -> existing.getId().equals(r.getId())))
+                .forEach(mergedRestaurants::add);
+
+        // Sort merged results by rating DESC, id ASC
+        List<Restaurant> sortedRestaurants = mergedRestaurants.stream()
+                .sorted((r1, r2) -> {
+                    int ratingCompare = Double.compare(r2.getRating() != null ? r2.getRating() : 0.0,
+                                                     r1.getRating() != null ? r1.getRating() : 0.0);
+                    if (ratingCompare == 0) {
+                        return Long.compare(r1.getId(), r2.getId());
+                    }
+                    return ratingCompare;
+                })
+                .collect(Collectors.toList());
+
+        // Results are now properly sorted
+        boolean hasMore = sortedRestaurants.size() > limit;
+        List<Restaurant> finalRestaurants = hasMore ? sortedRestaurants.subList(0, limit) : sortedRestaurants;
+
+        List<RestaurantResponse> restaurantResponses = finalRestaurants.stream()
+                .map(restaurantMapper::toResponse)
+                .collect(Collectors.toList());
+
+        Long nextCursor = null;
+        if (hasMore && !finalRestaurants.isEmpty()) {
+            nextCursor = finalRestaurants.get(finalRestaurants.size() - 1).getId();
+        }
+
+        PaginatedRestaurantResponse paginatedRestaurants = new PaginatedRestaurantResponse(restaurantResponses, nextCursor, hasMore);
+
+        // Search menu items (not paginated for now)
+        List<RestaurantMenuItem> menuItems = restaurantMenuItemRepository.searchByNameOrDescription(keyword);
+        List<MenuItemResponse> menuItemResponses = menuItems.stream()
+                .map(menuItemMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return new PaginatedSearchResultResponse(paginatedRestaurants, new PaginatedSearchResultResponse.MenuItemSearchResponse(menuItemResponses));
+    }
+    @Override
+    public PaginatedSearchResultResponse searchPaginatedByPrice(String keyword, Long cursor, Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 20;
+        }
+        // Fetch one extra to determine if there are more results
+        Pageable pageable = PageRequest.of(0, limit + 1);
+
+        List<Restaurant> restaurantsByName;
+        List<Restaurant> restaurantsByCuisine;
+
+        if (cursor == null) {
+            restaurantsByName = restaurantRepository.searchByNameOrderedByPrice(keyword, pageable);
+            restaurantsByCuisine = restaurantRepository.searchByCuisineTagOrderedByPrice(keyword, pageable);
+        } else {
+            restaurantsByName = restaurantRepository.searchByNameWithCursorOrderedByPrice(keyword, cursor, pageable);
+            restaurantsByCuisine = restaurantRepository.searchByCuisineTagWithCursorOrderedByPrice(keyword, cursor, pageable);
+        }
+
+        // Merge and deduplicate results
+        List<Restaurant> mergedRestaurants = restaurantsByName.stream()
+                .collect(Collectors.toList());
+
+        restaurantsByCuisine.stream()
+                .filter(r -> mergedRestaurants.stream().noneMatch(existing -> existing.getId().equals(r.getId())))
+                .forEach(mergedRestaurants::add);
+
+        // Results are already sorted by price ASC, id ASC from repository
+        boolean hasMore = mergedRestaurants.size() > limit;
+        List<Restaurant> finalRestaurants = hasMore ? mergedRestaurants.subList(0, limit) : mergedRestaurants;
+
+        List<RestaurantResponse> restaurantResponses = finalRestaurants.stream()
+                .map(restaurantMapper::toResponse)
+                .collect(Collectors.toList());
+
+        Long nextCursor = null;
+        if (hasMore && !finalRestaurants.isEmpty()) {
+            nextCursor = finalRestaurants.get(finalRestaurants.size() - 1).getId();
+        }
+
+        PaginatedRestaurantResponse paginatedRestaurants = new PaginatedRestaurantResponse(restaurantResponses, nextCursor, hasMore);
+
+        // Search menu items (not paginated for now)
+        List<RestaurantMenuItem> menuItems = restaurantMenuItemRepository.searchByNameOrDescription(keyword);
+        List<MenuItemResponse> menuItemResponses = menuItems.stream()
+                .map(menuItemMapper::toResponse)
+                .collect(Collectors.toList());
+
         return new PaginatedSearchResultResponse(paginatedRestaurants, new PaginatedSearchResultResponse.MenuItemSearchResponse(menuItemResponses));
     }
 }

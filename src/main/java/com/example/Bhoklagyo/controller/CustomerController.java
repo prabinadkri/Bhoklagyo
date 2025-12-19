@@ -39,7 +39,7 @@ public class CustomerController {
                 .orElseThrow(() -> new RuntimeException("User not found"))
                 .getId();
         
-        OrderResponse updatedOrder = orderService.submitOrderFeedback(userId, orderId, request.getFeedback());
+        OrderResponse updatedOrder = orderService.submitOrderFeedback(userId, orderId, request.getFeedback(), request.getRating());
         return ResponseEntity.ok(updatedOrder);
     }
 }

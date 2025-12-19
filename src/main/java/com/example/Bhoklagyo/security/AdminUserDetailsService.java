@@ -2,6 +2,8 @@ package com.example.Bhoklagyo.security;
 
 import com.example.Bhoklagyo.entity.Admin;
 import com.example.Bhoklagyo.repository.AdminRepository;
+
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -9,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+
 
 // @Service("adminUserDetailsService") - Disabled in favor of UnifiedUserDetailsService
 public class AdminUserDetailsService implements UserDetailsService {

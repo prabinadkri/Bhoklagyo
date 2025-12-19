@@ -23,6 +23,10 @@ public class RestaurantRequest {
     private List<String> cuisineTags;
     private List<String> dietaryTags;
     private List<Long> documentIds = new ArrayList<>();
+    private String addressLabel;
+    private String openingTime;
+    private String closingTime;
+    private Boolean isOpen;
 
     public RestaurantRequest() {}
 
@@ -36,6 +40,38 @@ public class RestaurantRequest {
         this.cuisineTags = cuisineTags;
         this.dietaryTags = dietaryTags;
         this.documentIds = documentIds;
+    }
+
+    public String getAddressLabel() {
+        return addressLabel;
+    }
+
+    public void setAddressLabel(String addressLabel) {
+        this.addressLabel = addressLabel;
+    }
+
+    public String getOpeningTime() {
+        return openingTime;
+    }
+
+    public void setOpeningTime(String openingTime) {
+        this.openingTime = openingTime;
+    }
+
+    public String getClosingTime() {
+        return closingTime;
+    }
+
+    public void setClosingTime(String closingTime) {
+        this.closingTime = closingTime;
+    }
+
+    public Boolean getIsOpen() {
+        return isOpen;
+    }
+
+    public void setIsOpen(Boolean isOpen) {
+        this.isOpen = isOpen;
     }
 
     public String getName() {

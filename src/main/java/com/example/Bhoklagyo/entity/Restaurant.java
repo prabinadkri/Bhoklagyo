@@ -1,8 +1,11 @@
 package com.example.Bhoklagyo.entity;
+
 import java.util.*;
+import java.time.LocalTime;
 
 import jakarta.persistence.*;
-
+import org.locationtech.jts.geom.Point;
+import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "restaurants")
 public class Restaurant {
@@ -12,9 +15,8 @@ public class Restaurant {
     
     private String name;
     
-    private Double latitude;
-    
-    private Double longitude;
+    @Column(columnDefinition = "geometry(Point,4326)")
+    private Point location;
     
     @Column(name = "contact_number")
     private String contactNumber;
@@ -25,6 +27,27 @@ public class Restaurant {
     @Column(name = "photo_url")
     private String photoUrl;
     
+    @Column(name = "address_label")
+    private String addressLabel;
+    @Column(name = "opening_time")
+    private LocalTime openingTime;
+
+    @Column(name = "closing_time")
+    private LocalTime closingTime;
+
+    @Column(name = "is_open", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isOpen = false;
+    @Column(name = "total_rating", columnDefinition = "bigint default 0")
+    private Long totalRating = 0L;
+
+    @Column(name = "total_count", columnDefinition = "bigint default 0")
+    private Long totalCount = 0L;
+
+    @Column(name = "rating", columnDefinition = "double precision default 0")
+    private Double rating = 0.0;
+
+    @Column(name="average_for_one", columnDefinition = "integer default 0")
+    private int averageForOne=0;
     @ManyToOne
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
@@ -70,21 +93,12 @@ public class Restaurant {
     public void setName(String name) {
         this.name = name;
     }
-    
-    public Double getLatitude() {
-        return latitude;
+    public Point getLocation() {
+        return location;
     }
-    
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-    
-    public Double getLongitude() {
-        return longitude;
-    }
-    
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
+
+    public void setLocation(Point location) {
+        this.location = location;
     }
     
     public String getContactNumber() {
@@ -109,6 +123,62 @@ public class Restaurant {
     
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public String getAddressLabel() {
+        return addressLabel;
+    }
+
+    public void setAddressLabel(String addressLabel) {
+        this.addressLabel = addressLabel;
+    }
+
+    public LocalTime getOpeningTime() {
+        return openingTime;
+    }
+
+    public void setOpeningTime(LocalTime openingTime) {
+        this.openingTime = openingTime;
+    }
+
+    public LocalTime getClosingTime() {
+        return closingTime;
+    }
+
+    public void setClosingTime(LocalTime closingTime) {
+        this.closingTime = closingTime;
+    }
+
+    public Boolean getIsOpen() {
+        return isOpen;
+    }
+
+    public void setIsOpen(Boolean isOpen) {
+        this.isOpen = isOpen;
+    }
+
+    public Long getTotalRating() {
+        return totalRating;
+    }
+
+    public void setTotalRating(Long totalRating) {
+        this.totalRating = totalRating;
+    }
+
+    public Long getTotalCount() {
+        return totalCount;
+    }
+
+    public void setTotalCount(Long totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
     }
     
     public Vendor getVendor() {
@@ -166,4 +236,8 @@ public class Restaurant {
     public void setDocuments(Set<Document> documents) {
         this.documents = documents;
     }
+    public int getAverageForOne() {
+        return averageForOne;
+    }
+    public void setAverageForOne(int averageForOne) {this.averageForOne = averageForOne;}
 }

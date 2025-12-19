@@ -5,7 +5,7 @@ import com.example.Bhoklagyo.dto.AssignOwnerRequest;
 import com.example.Bhoklagyo.dto.LoginRequest;
 import com.example.Bhoklagyo.dto.LoginResponse;
 import com.example.Bhoklagyo.dto.RestaurantResponse;
-import com.example.Bhoklagyo.service.AdminService;
+import com.example.Bhoklagyo.service.RestaurantAverageUpdater;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,14 +14,17 @@ import com.example.Bhoklagyo.dto.AdminDashboardResponse;
 import com.example.Bhoklagyo.entity.Role;
 import com.example.Bhoklagyo.dto.RoleUpdateRequest;
 import com.example.Bhoklagyo.dto.UserResponse;
+import com.example.Bhoklagyo.service.AdminService;
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
 
     private final AdminService adminService;
+    private final RestaurantAverageUpdater restaurantAverageUpdater;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, RestaurantAverageUpdater restaurantAverageUpdater) {
         this.adminService = adminService;
+        this.restaurantAverageUpdater = restaurantAverageUpdater;
     }
 
     @PostMapping("/register")
@@ -65,5 +68,13 @@ public class AdminController {
     public ResponseEntity<Void> deleteRestaurant(@PathVariable Long restaurantId) {
         adminService.deleteRestaurant(restaurantId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/update-average-for-one")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> updateAverageForOne() {
+    
+        restaurantAverageUpdater.updateAverageForOne();
+        return ResponseEntity.ok("Average for one updated successfully for all restaurants.");
     }
 }

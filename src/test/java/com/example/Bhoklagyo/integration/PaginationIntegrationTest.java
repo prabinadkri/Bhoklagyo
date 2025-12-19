@@ -19,6 +19,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -66,8 +70,9 @@ public class PaginationIntegrationTest {
         for (int i = 1; i <= 15; i++) {
             Restaurant restaurant = new Restaurant();
             restaurant.setName("Restaurant " + i);
-            restaurant.setLatitude(27.7 + i * 0.01);
-            restaurant.setLongitude(85.3 + i * 0.01);
+            GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
+            Point p = gf.createPoint(new Coordinate(85.3 + i * 0.01, 27.7 + i * 0.01));
+            restaurant.setLocation(p);
             restaurant.setVendor(vendor);
             
             // Assign cuisine tags

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 @Transactional(readOnly = true)
@@ -192,7 +193,10 @@ public class SearchServiceImpl implements SearchService {
                 .filter(r -> mergedRestaurants.stream().noneMatch(existing -> existing.getId().equals(r.getId())))
                 .forEach(mergedRestaurants::add);
 
-        // Results are already sorted by rating DESC, id ASC from repository
+        // Sort by rating DESC, id ASC in service
+        mergedRestaurants.sort(Comparator.comparing(Restaurant::getRating, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Restaurant::getId));
+
         boolean hasMore = mergedRestaurants.size() > limit;
         List<Restaurant> finalRestaurants = hasMore ? mergedRestaurants.subList(0, limit) : mergedRestaurants;
 

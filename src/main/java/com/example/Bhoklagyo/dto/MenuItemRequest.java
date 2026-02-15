@@ -1,11 +1,26 @@
 package com.example.Bhoklagyo.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
 public class MenuItemRequest {
     private Long categoryId;  // Reference to base Category, null if creating new
     private String categoryName;  // For creating new base Category (e.g., "Pizza", "Burger")
+
+    @NotBlank(message = "Menu item name is required")
+    @Size(max = 200, message = "Name must not exceed 200 characters")
     private String name;      // Restaurant-specific name (e.g., "Margherita Pizza", "Cheese Burger")
+
+    @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
+
+    @NotNull(message = "Price is required")
+    @Positive(message = "Price must be positive")
     private Double price;
+
+    @Positive(message = "Discounted price must be positive")
     private Double discountedPrice;
     private Boolean isVegan;
     private Boolean isVegetarian;

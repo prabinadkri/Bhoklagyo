@@ -1,0 +1,109 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "rate(http_server_requests_seconds_count{application=\"bhoklagyo\"}[1m])",
+          "legendFormat": "{{method}} {{uri}} {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Response Time p95 (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"bhoklagyo\"}[5m])) * 1000",
+          "legendFormat": "p95 {{uri}}"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate (5xx)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"bhoklagyo\",status=~\"5..\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "title": "JVM Heap Used",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "jvm_memory_used_bytes{application=\"bhoklagyo\", area=\"heap\"} / 1024 / 1024",
+          "legendFormat": "{{id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "decmbytes" }
+      }
+    },
+    {
+      "title": "Active Threads",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "jvm_threads_live_threads{application=\"bhoklagyo\"}"
+        }
+      ]
+    },
+    {
+      "title": "DB Connection Pool",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "hikaricp_connections_active{application=\"bhoklagyo\"}",
+          "legendFormat": "active"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "hikaricp_connections_idle{application=\"bhoklagyo\"}",
+          "legendFormat": "idle"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "hikaricp_connections_pending{application=\"bhoklagyo\"}",
+          "legendFormat": "pending"
+        }
+      ]
+    },
+    {
+      "title": "Application Logs",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 28 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "{container=\"bhoklagyo-app\"}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["bhoklagyo", "spring-boot"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Bhoklagyo - Application Dashboard",
+  "uid": "bhoklagyo-app-dashboard"
+}

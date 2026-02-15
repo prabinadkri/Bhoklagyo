@@ -1,0 +1,67 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bhoklagyo-network-policy
+  namespace: bhoklagyo
+  labels:
+    app.kubernetes.io/name: bhoklagyo
+    app.kubernetes.io/component: security
+spec:
+  podSelector: {}   # Apply to all pods in this namespace
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow ingress controller to reach the app
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8080
+          protocol: TCP
+
+    # Allow intra-namespace communication (app ↔ postgres, redis, kafka)
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 8080
+          protocol: TCP
+        - port: 5432
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+        - port: 9092
+          protocol: TCP
+        - port: 2181
+          protocol: TCP
+
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+    # Allow intra-namespace traffic
+    - to:
+        - podSelector: {}
+
+    # Allow outbound HTTPS (for external APIs, email services)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 587
+          protocol: TCP   # SMTP TLS

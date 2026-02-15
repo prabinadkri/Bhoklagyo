@@ -1,16 +1,31 @@
 package com.example.Bhoklagyo.dto;
 
 import com.example.Bhoklagyo.entity.OrderStatus;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class OrderRequest {
+    @NotNull(message = "Customer ID is required")
     private Long customerId;
+
+    @NotNull(message = "Restaurant ID is required")
     private Long restaurantId;
+
+    @NotEmpty(message = "Order must contain at least one item")
+    @Valid
     private List<OrderItemRequest> items;
+
     private OrderStatus status;
     private Double deliveryLatitude;
     private Double deliveryLongitude;
+
+    @Size(max = 1000, message = "Feedback must not exceed 1000 characters")
     private String feedback;
+
+    @Size(max = 500, message = "Special request must not exceed 500 characters")
     private String specialRequest;
 
     public OrderRequest() {}

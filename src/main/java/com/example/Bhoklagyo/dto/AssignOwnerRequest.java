@@ -1,7 +1,12 @@
 package com.example.Bhoklagyo.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public class AssignOwnerRequest {
+    @NotNull(message = "User ID is required")
     private Long userId;
+
+    @NotNull(message = "Restaurant ID is required")
     private Long restaurantId;
 
     public AssignOwnerRequest() {}

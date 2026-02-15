@@ -1,0 +1,19 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.log
+*.iml
+.idea/
+.vscode/
+.DS_Store
+uploads/
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# Environment
+.env
+*.env.local

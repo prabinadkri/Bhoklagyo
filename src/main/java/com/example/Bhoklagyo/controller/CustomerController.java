@@ -7,6 +7,7 @@ import com.example.Bhoklagyo.dto.FeedbackRequest;
 import com.example.Bhoklagyo.dto.OrderResponse;
 import com.example.Bhoklagyo.service.OrderService;
 import com.example.Bhoklagyo.repository.UserRepository;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class CustomerController {
         return ResponseEntity.ok(orders);
     }
     @PostMapping("/{orderId}/feedback")
-    public ResponseEntity<OrderResponse> submitOrderFeedback(Authentication authentication, @PathVariable Long orderId, @RequestBody FeedbackRequest request) {
+    public ResponseEntity<OrderResponse> submitOrderFeedback(Authentication authentication, @PathVariable Long orderId, @Valid @RequestBody FeedbackRequest request) {
         String email = authentication.getName();
         Long userId = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"))

@@ -22,6 +22,7 @@ import com.example.Bhoklagyo.service.RestaurantService;
 import com.example.Bhoklagyo.service.MenuItemService;
 import com.example.Bhoklagyo.dto.UserResponse;
 import com.example.Bhoklagyo.mapper.UserMapper;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class RestaurantController {
     
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RestaurantResponse> createRestaurant(@RequestBody RestaurantRequest request) {
+    public ResponseEntity<RestaurantResponse> createRestaurant(@Valid @RequestBody RestaurantRequest request) {
         RestaurantResponse response = restaurantService.createRestaurant(request);
         return ResponseEntity.status(201).body(response);
     }
@@ -99,7 +100,7 @@ public class RestaurantController {
     @PostMapping("/{id}/menu")
     public ResponseEntity<List<MenuItemResponse>> addMenuItemsToRestaurant(
             @PathVariable Long id, 
-            @RequestBody List<MenuItemRequest> menuItemRequests) {
+            @RequestBody @Valid List<MenuItemRequest> menuItemRequests) {
         List<MenuItemResponse> responses = menuItemService.addMenuItemsToRestaurant(id, menuItemRequests);
         return ResponseEntity.status(201).body(responses);
     }
@@ -108,7 +109,7 @@ public class RestaurantController {
     public ResponseEntity<MenuItemResponse> updateRestaurantMenuItem(
             @PathVariable Long id,
             @PathVariable Long restaurantMenuItemId, 
-            @RequestBody MenuItemRequest menuItemRequest) {
+            @RequestBody @Valid MenuItemRequest menuItemRequest) {
         MenuItemResponse response = menuItemService.updateRestaurantMenuItem(restaurantMenuItemId, menuItemRequest);
         return ResponseEntity.ok(response);
     }
@@ -130,7 +131,7 @@ public class RestaurantController {
         @PostMapping("/{id}/invite-employee")
         @PreAuthorize("hasRole('OWNER')")
         public ResponseEntity<?> inviteEmployee(@PathVariable Long id,
-                            @RequestBody InviteEmployeeRequest request,
+                            @Valid @RequestBody InviteEmployeeRequest request,
                             Authentication authentication) {
         String email = authentication.getName();
         User requester = userRepository.findByEmail(email)

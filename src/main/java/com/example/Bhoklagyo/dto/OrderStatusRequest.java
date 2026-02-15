@@ -1,8 +1,10 @@
 package com.example.Bhoklagyo.dto;
 
 import com.example.Bhoklagyo.entity.OrderStatus;
+import jakarta.validation.constraints.NotNull;
 
 public class OrderStatusRequest {
+    @NotNull(message = "Status is required")
     private OrderStatus status;
 
     public OrderStatusRequest() {}

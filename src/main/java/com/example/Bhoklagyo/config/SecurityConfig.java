@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,11 +26,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitingFilter rateLimitingFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, 
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                         RateLimitingFilter rateLimitingFilter,
                          CorsConfigurationSource corsConfigurationSource) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
@@ -38,6 +42,23 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; " +
+                                "script-src 'self' 'unsafe-inline'; " +
+                                "style-src 'self' 'unsafe-inline'; " +
+                                "img-src 'self' data:; " +
+                                "frame-ancestors 'none'"))
+                        .frameOptions(frame -> frame.deny())
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000))
+                        .contentTypeOptions(cto -> {})
+                        .referrerPolicy(ref -> ref
+                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(perms -> perms
+                                .policy("camera=(), microphone=(), geolocation=(self)"))
+                )
                 .authorizeHttpRequests(auth -> auth
                         // OPTIONS and OSRM must be first to allow preflight and routing
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -47,9 +68,14 @@ public class SecurityConfig {
                         // Invitation acceptance requires authentication of invited user
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/search/**").permitAll()
-                        .requestMatchers("/restaurants", "/restaurants/**").permitAll()
+                        // Only allow GET on restaurants publicly; mutations require auth
+                        .requestMatchers(HttpMethod.GET, "/restaurants", "/restaurants/**").permitAll()
+                        .requestMatchers("/restaurants/**").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/ws", "/ws/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -60,7 +86,8 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitingFilter, SecurityContextHolderFilter.class);
 
         return http.build();
     }

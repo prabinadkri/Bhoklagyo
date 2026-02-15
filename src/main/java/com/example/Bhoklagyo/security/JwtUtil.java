@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,14 +20,31 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
-    private String SECRET_KEY;
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
-    @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
+    @Value("${jwt.secret:}")
+    private String secretKey;
+
+    @Value("${jwt.expiration:86400000}")
     private Long jwtExpiration;
 
+    @PostConstruct
+    void validateSecret() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT secret is not configured. Set the JWT_SECRET environment variable " +
+                    "(minimum 32 characters for HS256).");
+        }
+        if (secretKey.length() < 32) {
+            throw new IllegalStateException(
+                    "JWT secret is too short (" + secretKey.length() + " chars). " +
+                    "Minimum 32 characters required for HS256.");
+        }
+        log.info("JWT secret validated ({} chars)", secretKey.length());
+    }
+
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     public String extractUsername(String token) {

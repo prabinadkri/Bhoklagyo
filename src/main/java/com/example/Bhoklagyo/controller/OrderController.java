@@ -6,6 +6,7 @@ import com.example.Bhoklagyo.dto.OrderRequest;
 import com.example.Bhoklagyo.dto.OrderResponse;
 import com.example.Bhoklagyo.dto.OrderStatusRequest;
 import com.example.Bhoklagyo.service.OrderService;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -31,12 +32,12 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
     @PatchMapping("/{orderId}")
-    public ResponseEntity<OrderResponse> updateOrderStatus(@PathVariable Long restaurantId, @PathVariable Long orderId, @RequestBody OrderStatusRequest request) {
+    public ResponseEntity<OrderResponse> updateOrderStatus(@PathVariable Long restaurantId, @PathVariable Long orderId, @Valid @RequestBody OrderStatusRequest request) {
         OrderResponse updatedOrder = orderService.updateOrderStatus(restaurantId, orderId, request.getStatus());
         return ResponseEntity.ok(updatedOrder);
     }
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@PathVariable Long restaurantId, @RequestBody OrderRequest request) {
+    public ResponseEntity<OrderResponse> createOrder(@PathVariable Long restaurantId, @Valid @RequestBody OrderRequest request) {
         OrderResponse order = orderService.createOrder(restaurantId, request);
         return ResponseEntity.status(201).body(order);
     }

@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bhoklagyo-config
+  namespace: bhoklagyo
+  labels:
+    app.kubernetes.io/name: bhoklagyo
+    app.kubernetes.io/component: config
+data:
+  # Spring profiles
+  SPRING_PROFILES_ACTIVE: "docker"
+
+  # Database
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/bhoklagyo"
+  SPRING_DATASOURCE_USERNAME: "bhokuser"
+
+  # Redis
+  SPRING_DATA_REDIS_HOST: "redis"
+  SPRING_DATA_REDIS_PORT: "6379"
+
+  # Kafka
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  SPRING_KAFKA_CONSUMER_GROUP_ID: "bhoklagyo-group"
+
+  # Mail (Mailpit in dev, override for production SMTP)
+  SPRING_MAIL_HOST: "mailpit"
+  SPRING_MAIL_PORT: "1025"
+
+  # Flyway
+  SPRING_FLYWAY_ENABLED: "true"
+
+  # Actuator
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus,metrics,flyway"
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+
+  # Rate limiting
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW_SECONDS: "60"
+
+  # JWT expiration (24 hours in ms)
+  JWT_EXPIRATION: "86400000"
+
+  # File uploads
+  FILE_UPLOAD_DIR: "/app/uploads/restaurant-images"

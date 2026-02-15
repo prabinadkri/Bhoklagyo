@@ -18,11 +18,14 @@ import com.example.Bhoklagyo.mapper.RestaurantMapper;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    public final UserRepository userRepository;
-    public final UserMapper userMapper;
-    public UserController(UserRepository userRepository, UserMapper userMapper) {
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final RestaurantMapper restaurantMapper;
+
+    public UserController(UserRepository userRepository, UserMapper userMapper, RestaurantMapper restaurantMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.restaurantMapper = restaurantMapper;
     }
     @GetMapping
     public ResponseEntity<UserResponse> getUserByEmail(@RequestParam String email) {
@@ -35,7 +38,6 @@ public class UserController {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         Restaurant restaurant = user.getEmployedRestaurant();
-        RestaurantMapper restaurantMapper = new RestaurantMapper();
         RestaurantResponse response = restaurantMapper.toResponse(restaurant);
         return ResponseEntity.ok(response);
     }

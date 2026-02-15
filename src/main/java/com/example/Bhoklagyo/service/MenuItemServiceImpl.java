@@ -12,6 +12,9 @@ import com.example.Bhoklagyo.repository.CategoryRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
 import com.example.Bhoklagyo.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "menuItems", key = "#restaurantId")
     public List<MenuItemResponse> getMenuItemsByRestaurantId(Long restaurantId) {
         return restaurantMenuItemRepository.findByRestaurantId(restaurantId)
             .stream()
@@ -52,6 +56,10 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
     
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "menuItems", key = "#restaurantId"),
+            @CacheEvict(value = "searchResults", allEntries = true)
+    })
     public List<MenuItemResponse> addMenuItemsToRestaurant(Long restaurantId, List<MenuItemRequest> menuItemRequests) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
@@ -103,6 +111,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
     
     @Override
+    @CacheEvict(value = "menuItems", allEntries = true)
     public MenuItemResponse updateRestaurantMenuItem(Long restaurantMenuItemId, MenuItemRequest menuItemRequest) {
         RestaurantMenuItem restaurantMenuItem = restaurantMenuItemRepository.findById(restaurantMenuItemId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant menu item not found with id: " + restaurantMenuItemId));
@@ -135,6 +144,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
     
     @Override
+    @CacheEvict(value = "menuItems", allEntries = true)
     public void deleteRestaurantMenuItem(Long restaurantMenuItemId) {
         RestaurantMenuItem restaurantMenuItem = restaurantMenuItemRepository.findById(restaurantMenuItemId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant menu item not found with id: " + restaurantMenuItemId));

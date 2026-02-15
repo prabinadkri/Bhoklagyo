@@ -25,11 +25,15 @@ import jakarta.persistence.EntityManager;
 import java.io.File;
 
 import jakarta.persistence.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +44,11 @@ import com.example.Bhoklagyo.dto.UserResponse;
 
 @Service
 public class AdminService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminService.class);
+
+    @Value("${admin.registration.secret:}")
+    private String adminRegistrationSecret;
 
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
@@ -72,6 +81,16 @@ public class AdminService {
     }
 
     public LoginResponse register(AdminRegisterRequest request) {
+        // Validate admin registration secret
+        if (adminRegistrationSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "Admin registration is disabled. Set ADMIN_REGISTRATION_SECRET environment variable.");
+        }
+        if (!adminRegistrationSecret.equals(request.getRegistrationSecret())) {
+            log.warn("Invalid admin registration attempt for email: {}", request.getEmail());
+            throw new AccessDeniedException("Invalid registration secret");
+        }
+
         if (adminRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("Email already exists");
         }

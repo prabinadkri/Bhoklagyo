@@ -18,6 +18,9 @@ import com.example.Bhoklagyo.repository.RestaurantRepository;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.repository.VendorRepository;
 import com.example.Bhoklagyo.repository.DocumentRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -59,6 +62,11 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
     
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "restaurants", allEntries = true),
+            @CacheEvict(value = "featuredRestaurants", allEntries = true),
+            @CacheEvict(value = "searchResults", allEntries = true)
+    })
     public RestaurantResponse createRestaurant(RestaurantRequest request) {
         // Restaurant creation is now handled by ADMIN only (enforced by @PreAuthorize in controller)
         // Admin creates restaurant with vendor and documents
@@ -111,6 +119,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "restaurant", key = "#id")
     public RestaurantResponse getRestaurantById(Long id) {
         Restaurant restaurant = restaurantRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + id));
@@ -128,6 +137,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "restaurants", key = "'page:' + #cursor + ':' + #limit")
     public PaginatedRestaurantResponse getAllRestaurantsPaginated(Long cursor, Integer limit) {
         if (limit == null || limit <= 0) {
             limit = 20;
@@ -161,6 +171,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "featuredRestaurants")
     public List<RestaurantResponse> getFeaturedRestaurants() {
         return restaurantRepository.findByIsFeaturedTrue()
             .stream()
@@ -179,6 +190,10 @@ public class RestaurantServiceImpl implements RestaurantService {
     
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "restaurant", key = "#restaurantId"),
+            @CacheEvict(value = "restaurants", allEntries = true)
+    })
     public RestaurantResponse updateRestaurantImage(Long restaurantId, String imagePath) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));
@@ -190,6 +205,10 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "restaurant", key = "#restaurantId"),
+            @CacheEvict(value = "restaurants", allEntries = true)
+    })
     public RestaurantResponse setRestaurantIsOpen(Long restaurantId, Boolean isOpen) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with id: " + restaurantId));

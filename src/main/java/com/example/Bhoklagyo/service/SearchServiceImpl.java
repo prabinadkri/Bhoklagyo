@@ -11,6 +11,7 @@ import com.example.Bhoklagyo.mapper.MenuItemMapper;
 import com.example.Bhoklagyo.mapper.RestaurantMapper;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,7 @@ public class SearchServiceImpl implements SearchService {
     }
     
     @Override
+    @Cacheable(value = "searchResults", key = "'basic:' + #keyword + ':' + #cursor + ':' + #limit")
     public PaginatedSearchResultResponse searchPaginated(String keyword, Long cursor, Integer limit) {
         if (limit == null || limit <= 0) {
             limit = 20;
@@ -156,6 +158,7 @@ public class SearchServiceImpl implements SearchService {
         return new PaginatedSearchResultResponse(paginatedRestaurants, new PaginatedSearchResultResponse.MenuItemSearchResponse(menuItemResponses));
     }
     @Override
+    @Cacheable(value = "searchResults", key = "'rating:' + #keyword + ':' + #cursor + ':' + #limit")
     public PaginatedSearchResultResponse searchPaginatedByRating(String keyword, Long cursor, Integer limit) {
         if (limit == null || limit <= 0) {
             limit = 20;
@@ -220,6 +223,7 @@ public class SearchServiceImpl implements SearchService {
         return new PaginatedSearchResultResponse(paginatedRestaurants, new PaginatedSearchResultResponse.MenuItemSearchResponse(menuItemResponses));
     }
     @Override
+    @Cacheable(value = "searchResults", key = "'price:' + #keyword + ':' + #cursor + ':' + #limit")
     public PaginatedSearchResultResponse searchPaginatedByPrice(String keyword, Long cursor, Integer limit) {
         if (limit == null || limit <= 0) {
             limit = 20;

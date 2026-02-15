@@ -9,12 +9,19 @@ import com.example.Bhoklagyo.entity.OrderItem;
 import com.example.Bhoklagyo.entity.OrderStatus;
 import com.example.Bhoklagyo.entity.Restaurant;
 import com.example.Bhoklagyo.entity.Role;
+import com.example.Bhoklagyo.event.EventPublisher;
+import com.example.Bhoklagyo.event.NotificationEvent;
+import com.example.Bhoklagyo.event.OrderEvent;
+import com.example.Bhoklagyo.event.OrderItemEvent;
 import com.example.Bhoklagyo.exception.ResourceNotFoundException;
 import com.example.Bhoklagyo.mapper.OrderMapper;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.repository.RestaurantMenuItemRepository;
 import com.example.Bhoklagyo.repository.OrderRepository;
 import com.example.Bhoklagyo.repository.RestaurantRepository;
+import com.example.Bhoklagyo.util.InputSanitizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +34,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
     
     private final OrderRepository orderRepository;
     private final RestaurantRepository restaurantRepository;
@@ -34,19 +43,23 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     private final com.example.Bhoklagyo.websocket.OrderEventSender orderEventSender;
+    private final EventPublisher eventPublisher;  // null when Kafka is disabled
     
     public OrderServiceImpl(OrderRepository orderRepository,
                            RestaurantRepository restaurantRepository,
                            RestaurantMenuItemRepository restaurantMenuItemRepository,
                            UserRepository userRepository,
                            OrderMapper orderMapper,
-                           com.example.Bhoklagyo.websocket.OrderEventSender orderEventSender) {
+                           com.example.Bhoklagyo.websocket.OrderEventSender orderEventSender,
+                           @org.springframework.beans.factory.annotation.Autowired(required = false)
+                           EventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.restaurantRepository = restaurantRepository;
         this.restaurantMenuItemRepository = restaurantMenuItemRepository;
         this.userRepository = userRepository;
         this.orderMapper = orderMapper;
         this.orderEventSender = orderEventSender;
+        this.eventPublisher = eventPublisher;
     }
     
     @Override
@@ -70,8 +83,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(request.getStatus());
         order.setDeliveryLatitude(request.getDeliveryLatitude());
         order.setDeliveryLongitude(request.getDeliveryLongitude());
-        order.setFeedback(request.getFeedback());
-        order.setSpecialRequest(request.getSpecialRequest());
+        order.setFeedback(InputSanitizer.sanitize(request.getFeedback()));
+        order.setSpecialRequest(InputSanitizer.sanitize(request.getSpecialRequest()));
         order.setOrderTime(LocalDateTime.now());
         
         // Create OrderItem entities with quantities and calculate total
@@ -99,12 +112,36 @@ public class OrderServiceImpl implements OrderService {
 
         // Notify the customer (user-specific queue) and the restaurant topic
         try {
-            // At creation: send CREATED notification to restaurant only
-            // (no customer websocket notification on create to avoid duplicate/extra notifications)
             orderEventSender.sendOrderCreatedToRestaurant(restaurant.getId(), response);
         } catch (Exception e) {
-            // Do not fail the request if notification fails; just log
-            System.err.println("Failed to send order websocket event: " + e.getMessage());
+            log.warn("Failed to send order websocket event: {}", e.getMessage());
+        }
+
+        // Publish order event to Kafka for async processing
+        if (eventPublisher != null) {
+            try {
+                OrderEvent orderEvent = new OrderEvent(
+                        OrderEvent.EventType.ORDER_CREATED,
+                        savedOrder.getId(), restaurant.getId(),
+                        customer.getId(), savedOrder.getStatus().name(),
+                        savedOrder.getTotalPrice(), null);
+                orderEvent.setItems(savedOrder.getOrderItems().stream()
+                        .map(oi -> new OrderItemEvent(
+                                oi.getMenuItem().getId(),
+                                oi.getMenuItem().getName(),
+                                oi.getQuantity(), oi.getPriceAtOrder(), oi.getSubtotal()))
+                        .collect(Collectors.toList()));
+                eventPublisher.publishOrderEvent(orderEvent);
+
+                // Publish notification event for the restaurant
+                eventPublisher.publishNotificationEvent(new NotificationEvent(
+                        savedOrder.getId(), restaurant.getId(), null,
+                        "ORDER_CREATED",
+                        savedOrder.getStatus().name() + " - New order #" + savedOrder.getId(),
+                        NotificationEvent.Channel.WEBSOCKET, null));
+            } catch (Exception e) {
+                log.warn("Failed to publish Kafka order event: {}", e.getMessage());
+            }
         }
 
         return response;
@@ -188,10 +225,34 @@ public class OrderServiceImpl implements OrderService {
 
         // Notify interested parties about status update
         try {
-            // On status update: notify the customer only (restaurant already knows about order)
             orderEventSender.sendOrderToCustomer(updatedOrder.getCustomer().getId(), response);
         } catch (Exception e) {
-            System.err.println("Failed to send order status websocket event: " + e.getMessage());
+            log.warn("Failed to send order status websocket event: {}", e.getMessage());
+        }
+
+        // Publish status update event to Kafka
+        if (eventPublisher != null) {
+            try {
+                OrderEvent.EventType eventType = (status == OrderStatus.CANCELLED)
+                        ? OrderEvent.EventType.ORDER_CANCELLED
+                        : OrderEvent.EventType.ORDER_STATUS_UPDATED;
+                OrderEvent orderEvent = new OrderEvent(
+                        eventType, updatedOrder.getId(),
+                        updatedOrder.getRestaurant().getId(),
+                        updatedOrder.getCustomer().getId(),
+                        status.name(), updatedOrder.getTotalPrice(), null);
+                eventPublisher.publishOrderEvent(orderEvent);
+
+                // Notify customer about status change
+                eventPublisher.publishNotificationEvent(new NotificationEvent(
+                        updatedOrder.getId(), updatedOrder.getRestaurant().getId(),
+                        updatedOrder.getCustomer().getId(),
+                        "ORDER_STATUS_CHANGED",
+                        status.name() + " - Order #" + updatedOrder.getId() + " updated",
+                        NotificationEvent.Channel.WEBSOCKET, null));
+            } catch (Exception e) {
+                log.warn("Failed to publish Kafka status event: {}", e.getMessage());
+            }
         }
 
         return response;
@@ -213,8 +274,8 @@ public class OrderServiceImpl implements OrderService {
             throw new AccessDeniedException("You can only submit feedback for your own orders");
         }
 
-        // Set feedback text
-        order.setFeedback(feedback);
+        // Set feedback text (sanitized)
+        order.setFeedback(InputSanitizer.sanitize(feedback));
 
         // Handle rating if provided (1-5)
         if (rating != null) {
@@ -254,7 +315,26 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order updatedOrder = orderRepository.save(order);
-        return orderMapper.toResponse(updatedOrder);
+        OrderResponse feedbackResponse = orderMapper.toResponse(updatedOrder);
+
+        // Publish feedback event to Kafka
+        if (eventPublisher != null) {
+            try {
+                OrderEvent feedbackEvent = new OrderEvent(
+                        OrderEvent.EventType.ORDER_FEEDBACK_SUBMITTED,
+                        updatedOrder.getId(),
+                        updatedOrder.getRestaurant() != null ? updatedOrder.getRestaurant().getId() : null,
+                        customerId, updatedOrder.getStatus().name(),
+                        updatedOrder.getTotalPrice(), null);
+                feedbackEvent.setFeedback(feedback);
+                feedbackEvent.setRating(rating);
+                eventPublisher.publishOrderEvent(feedbackEvent);
+            } catch (Exception e) {
+                log.warn("Failed to publish Kafka feedback event: {}", e.getMessage());
+            }
+        }
+
+        return feedbackResponse;
     }
 
     @Override

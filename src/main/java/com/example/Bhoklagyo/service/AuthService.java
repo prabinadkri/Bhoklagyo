@@ -8,6 +8,8 @@ import com.example.Bhoklagyo.entity.User;
 import com.example.Bhoklagyo.exception.DuplicateResourceException;
 import com.example.Bhoklagyo.repository.UserRepository;
 import com.example.Bhoklagyo.security.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,45 +18,50 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final AuditLogService auditLog;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
-                       JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
+                       JwtUtil jwtUtil, AuthenticationManager authenticationManager,
+                       AuditLogService auditLog) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.auditLog = auditLog;
     }
 
     public LoginResponse login(LoginRequest request) {
-        System.out.println("=== LOGIN START ===");
+        log.debug("Login attempt for email: {}", request.getEmail());
         try {
-            System.out.println("=== BEFORE AUTHENTICATION ===");
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
-            System.out.println("=== AFTER AUTHENTICATION ===");
         } catch (AuthenticationException e) {
-            System.out.println("=== AUTHENTICATION FAILED ===");
+            log.warn("Authentication failed for email: {}", request.getEmail());
+            auditLog.log(AuditLogService.AuditAction.USER_LOGIN_FAILED, request.getEmail(),
+                    Map.of("reason", "bad_credentials"));
             throw new BadCredentialsException("Invalid email or password");
         }
 
-        System.out.println("=== BEFORE FIND USER ===");
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        System.out.println("=== AFTER FIND USER ===");
 
-        System.out.println("=== BEFORE GENERATE TOKEN ===");
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        System.out.println("=== AFTER GENERATE TOKEN ===");
+        log.info("User logged in successfully: {}", request.getEmail());
+        auditLog.log(AuditLogService.AuditAction.USER_LOGIN_SUCCESS, request.getEmail(),
+                Map.of("userId", user.getId(), "role", user.getRole().name()));
 
-        System.out.println("=== BEFORE CREATE RESPONSE ===");
         return new LoginResponse(token, user.getEmail(), user.getName(), user.getRole().name(), user.getId());
     }
 
@@ -79,6 +86,9 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
+
+        auditLog.log(AuditLogService.AuditAction.USER_REGISTERED, savedUser.getEmail(),
+                Map.of("userId", savedUser.getId(), "role", savedUser.getRole().name()));
 
         return new LoginResponse(token, savedUser.getEmail(), savedUser.getName(), savedUser.getRole().name(), savedUser.getId());
     }

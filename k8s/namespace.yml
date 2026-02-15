@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bhoklagyo
+  labels:
+    app.kubernetes.io/part-of: bhoklagyo
+    app.kubernetes.io/managed-by: kubectl

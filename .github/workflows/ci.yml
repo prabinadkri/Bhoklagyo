@@ -53,6 +53,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/bhoklagyo_test
           SPRING_DATASOURCE_USERNAME: testuser
           SPRING_DATASOURCE_PASSWORD: testpass
+          SPRING_JPA_DATABASE_PLATFORM: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
           SPRING_PROFILES_ACTIVE: test
 
       - name: Upload test results

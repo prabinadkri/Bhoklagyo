@@ -51,6 +51,8 @@ public class RedisConfig implements CachingConfigurer {
     }
 
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            name = "spring.cache.type", havingValue = "redis", matchIfMissing = true)
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer(cacheObjectMapper());

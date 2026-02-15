@@ -58,7 +58,11 @@ public class PaginationIntegrationTest {
     @BeforeEach
     void setup() {
         // Clear all caches to avoid stale data from other test classes
-        cacheManager.getCacheNames().forEach(name -> cacheManager.getCache(name).clear());
+        try {
+            cacheManager.getCacheNames().forEach(name -> cacheManager.getCache(name).clear());
+        } catch (Exception e) {
+            // Redis unavailable in CI — caches not populated so clearing is unnecessary
+        }
 
         // Truncate all tables to cleanly reset state across test classes
         jdbcTemplate.execute("TRUNCATE TABLE order_items, orders, notifications, " +

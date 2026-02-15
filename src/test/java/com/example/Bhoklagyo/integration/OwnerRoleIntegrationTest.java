@@ -47,9 +47,10 @@ public class OwnerRoleIntegrationTest {
     void testRegisterAdmin() throws Exception {
         AdminRegisterRequest adminRequest = new AdminRegisterRequest();
         adminRequest.setName("Admin User");
-        adminRequest.setPassword("admin123");
+        adminRequest.setPassword("Admin123!");
         adminRequest.setEmail("admin_owner@test.com");
         adminRequest.setPhoneNumber("+977-9800000002");
+        adminRequest.setRegistrationSecret("test-admin-secret");
 
         MvcResult result = mockMvc.perform(post("/admin/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +72,7 @@ public class OwnerRoleIntegrationTest {
     void testRegisterOwner() throws Exception {
         RegisterRequest ownerRequest = new RegisterRequest();
         ownerRequest.setName("Restaurant Owner");
-        ownerRequest.setPassword("owner123");
+        ownerRequest.setPassword("Owner123!");
         ownerRequest.setEmail("owner@test.com");
         ownerRequest.setPhoneNumber("+977-9812345679");
         ownerRequest.setRole(Role.OWNER);
@@ -98,7 +99,7 @@ public class OwnerRoleIntegrationTest {
     void testRegisterCustomer() throws Exception {
         RegisterRequest customerRequest = new RegisterRequest();
         customerRequest.setName("Jane Customer");
-        customerRequest.setPassword("customer123");
+        customerRequest.setPassword("Customer123!");
         customerRequest.setEmail("customer_owner@test.com");
         customerRequest.setPhoneNumber("+977-9812345680");
         customerRequest.setRole(Role.CUSTOMER);

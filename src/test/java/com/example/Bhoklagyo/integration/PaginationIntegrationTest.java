@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -47,12 +49,22 @@ public class PaginationIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private CacheManager cacheManager;
+
     @BeforeEach
     void setup() {
-        restaurantRepository.deleteAll();
-        cuisineTagRepository.deleteAll();
-        vendorRepository.deleteAll();
-        userRepository.deleteAll();
+        // Clear all caches to avoid stale data from other test classes
+        cacheManager.getCacheNames().forEach(name -> cacheManager.getCache(name).clear());
+
+        // Truncate all tables to cleanly reset state across test classes
+        jdbcTemplate.execute("TRUNCATE TABLE order_items, orders, notifications, " +
+                "restaurant_menu_items, restaurant_cuisine_tags, restaurant_dietary_tags, " +
+                "restaurant_documents, restaurants, categories, cuisine_tags, dietary_tags, " +
+                "vendors, admins, users CASCADE");
 
         // Create a vendor
         Vendor vendor = new Vendor();

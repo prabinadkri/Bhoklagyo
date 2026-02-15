@@ -47,9 +47,10 @@ public class CustomerRoleIntegrationTest {
     void testRegisterAdmin() throws Exception {
         AdminRegisterRequest adminRequest = new AdminRegisterRequest();
         adminRequest.setName("Admin User");
-        adminRequest.setPassword("admin123");
+        adminRequest.setPassword("Admin123!");
         adminRequest.setEmail("admin@test.com");
         adminRequest.setPhoneNumber("+977-9800000001");
+        adminRequest.setRegistrationSecret("test-admin-secret");
 
         MvcResult result = mockMvc.perform(post("/admin/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -94,7 +95,7 @@ public class CustomerRoleIntegrationTest {
     void testRegisterCustomer() throws Exception {
         RegisterRequest customerRequest = new RegisterRequest();
         customerRequest.setName("John Customer");
-        customerRequest.setPassword("customer123");
+        customerRequest.setPassword("Customer123!");
         customerRequest.setEmail("customer@test.com");
         customerRequest.setPhoneNumber("+977-9812345678");
         customerRequest.setRole(Role.CUSTOMER);
@@ -218,7 +219,7 @@ public class CustomerRoleIntegrationTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setCustomerId(customerId);
         orderRequest.setRestaurantId(restaurantId);
-        orderRequest.setItems(Arrays.asList(new OrderItemRequest())); // Non-existent menu item
+        orderRequest.setItems(Arrays.asList(new OrderItemRequest(99999L, 1))); // Non-existent menu item
         orderRequest.setStatus(OrderStatus.PENDING);
         orderRequest.setDeliveryLatitude(27.7172);
         orderRequest.setDeliveryLongitude(85.3240);
@@ -304,7 +305,7 @@ public class CustomerRoleIntegrationTest {
         mockMvc.perform(post("/restaurants/" + restaurantId + "/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(orderRequest)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         
         System.out.println("✓ Unauthenticated users correctly denied access");
     }
